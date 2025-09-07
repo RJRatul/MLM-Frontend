@@ -27,7 +27,7 @@ const Button: React.FC<ButtonProps> = ({
   icon,
 }) => {
   // Base classes
-  const baseClasses = 'cursor-pointer flex justify-center items-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500';
+  const baseClasses = 'cursor-pointer flex justify-center items-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500';
   
   // Size classes
   const sizeClasses = {
@@ -36,11 +36,11 @@ const Button: React.FC<ButtonProps> = ({
     lg: 'px-6 py-3 text-sm',
   };
   
-  // Variant classes
+  // Variant classes - Updated primary to bluish-purplish gradient
   const variantClasses = {
-    primary: 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white hover:from-yellow-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed',
+    primary: 'bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed',
     secondary: 'bg-gray-700/50 text-gray-300 border border-gray-600 hover:bg-gray-700',
-    outline: 'border border-yellow-500 text-yellow-500 hover:bg-yellow-500/10',
+    outline: 'border border-blue-500 text-blue-500 hover:bg-blue-500/10',
   };
   
   const classes = `${baseClasses} ${sizeClasses[size]} ${variantClasses[variant]} ${className}`;

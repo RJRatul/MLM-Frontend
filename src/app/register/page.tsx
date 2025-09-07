@@ -61,7 +61,7 @@ export default function Register() {
         <div className="w-full max-w-md mb-6">
           <Link
             href="/"
-            className="inline-flex items-center text-gray-400 hover:text-yellow-400 transition-colors"
+            className="inline-flex items-center text-gray-400 hover:text-purple-400 transition-colors"
           >
             <FaArrowLeft className="mr-2" />
             Back to Home
@@ -72,7 +72,7 @@ export default function Register() {
           {/* Logo and heading */}
           <div className="text-center mb-8">
             
-            <h2 className="text-3xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
               Create your BeeCoin account
             </h2>
             <p className="mt-2 text-sm text-gray-400">
@@ -109,7 +109,7 @@ export default function Register() {
                       required
                       value={formData.firstName}
                       onChange={handleChange}
-                      className="block w-full pl-10 pr-3 py-2 bg-gray-700/50 border border-gray-600 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-white sm:text-sm"
+                      className="block w-full pl-10 pr-3 py-2 bg-gray-700/50 border border-gray-600 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white sm:text-sm"
                       placeholder="First name"
                     />
                   </div>
@@ -133,7 +133,7 @@ export default function Register() {
                       required
                       value={formData.lastName}
                       onChange={handleChange}
-                      className="block w-full pl-10 pr-3 py-2 bg-gray-700/50 border border-gray-600 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-white sm:text-sm"
+                      className="block w-full pl-10 pr-3 py-2 bg-gray-700/50 border border-gray-600 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white sm:text-sm"
                       placeholder="Last name"
                     />
                   </div>
@@ -159,7 +159,7 @@ export default function Register() {
                     required
                     value={formData.email}
                     onChange={handleChange}
-                    className="block w-full pl-10 pr-3 py-2 bg-gray-700/50 border border-gray-600 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-white sm:text-sm"
+                    className="block w-full pl-10 pr-3 py-2 bg-gray-700/50 border border-gray-600 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white sm:text-sm"
                     placeholder="Enter your email address"
                   />
                 </div>
@@ -184,7 +184,7 @@ export default function Register() {
                     required
                     value={formData.password}
                     onChange={handleChange}
-                    className="block w-full pl-10 pr-3 py-2 bg-gray-700/50 border border-gray-600 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-white sm:text-sm"
+                    className="block w-full pl-10 pr-3 py-2 bg-gray-700/50 border border-gray-600 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white sm:text-sm"
                     placeholder="Create a secure password"
                   />
                 </div>
