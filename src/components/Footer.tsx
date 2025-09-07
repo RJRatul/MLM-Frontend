@@ -12,7 +12,7 @@ export default function Footer() {
               <div className="w-18 h-10 flex items-center justify-center relative">
                 <Image
                   src="/logo.png" // Use the same logo as in header
-                  alt="NeuroTrade AI"
+                  alt="BeeCoin Logo"
                   fill
                   className="object-contain p-1"
                 />
