@@ -1,9 +1,7 @@
 'use client';
-
-import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import AuthGuard from '@/components/AuthGuard';
+import PrivateLayout from '@/layouts/PrivateLayout';
 
 export default function Trade() {
   const { user, logout } = useAuth();
@@ -15,7 +13,7 @@ export default function Trade() {
   };
 
   return (
-    <AuthGuard>
+    <PrivateLayout>
       <div className="min-h-screen bg-gray-900">
         <div className="container mx-auto px-4 py-8">
           <div className="flex justify-between items-center mb-8">
@@ -47,6 +45,6 @@ export default function Trade() {
           </div>
         </div>
       </div>
-    </AuthGuard>
+    </PrivateLayout>
   );
 }
