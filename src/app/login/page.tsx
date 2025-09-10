@@ -5,7 +5,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import AuthGuard from "@/components/AuthGuard";
-import PublicLayout from "@/layouts/PublicLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import Button from "@/components/Button";
 import {
@@ -14,7 +13,6 @@ import {
   FaUserPlus,
   FaLock,
   FaEnvelope,
-  FaCoins,
   FaEyeSlash,
   FaEye,
 } from "react-icons/fa";
