@@ -29,18 +29,20 @@ export interface RegisterData {
 
 export interface Deposit {
   _id: string;
-  userId: string;
   amount: number;
   transactionId: string;
   status: 'pending' | 'approved' | 'rejected';
-  adminId?: string;
   adminNote?: string;
   createdAt: string;
   updatedAt: string;
-  user?: {
+  userId?: {
     firstName: string;
     lastName: string;
     email: string;
+  };
+  admin?: {
+    firstName: string;
+    lastName: string;
   };
 }
 
@@ -177,18 +179,18 @@ class ApiService {
     return this.request<Deposit[]>('/deposits/pending');
   }
 
-  async getAllDeposits(filters?: {
-    status?: string;
-    page?: number;
-    limit?: number;
-  }): Promise<DepositsListResponse> {
-    const params = new URLSearchParams();
-    if (filters?.status) params.append('status', filters.status);
-    if (filters?.page) params.append('page', filters.page.toString());
-    if (filters?.limit) params.append('limit', filters.limit.toString());
+async getAllDeposits(filters?: {
+  status?: string;
+  page?: number;
+  limit?: number;
+}): Promise<DepositsListResponse> {
+  const params = new URLSearchParams();
+  if (filters?.status) params.append('status', filters.status);
+  if (filters?.page) params.append('page', filters.page.toString());
+  if (filters?.limit) params.append('limit', filters.limit.toString());
 
-    return this.request<DepositsListResponse>(`/deposits?${params.toString()}`);
-  }
+  return this.request<DepositsListResponse>(`/deposits?${params.toString()}`);
+}
 
   async approveDeposit(depositId: string, adminNote?: string): Promise<DepositResponse> {
     return this.request<DepositResponse>(`/deposits/${depositId}/approve`, {
