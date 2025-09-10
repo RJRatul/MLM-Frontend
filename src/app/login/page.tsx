@@ -15,6 +15,8 @@ import {
   FaLock,
   FaEnvelope,
   FaCoins,
+  FaEyeSlash,
+  FaEye,
 } from "react-icons/fa";
 
 export default function Login() {
@@ -22,6 +24,8 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
   const router = useRouter();
   const { login } = useAuth();
 
@@ -114,7 +118,7 @@ export default function Login() {
                   <input
                     id="password"
                     name="password"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     autoComplete="current-password"
                     required
                     value={password}
@@ -122,6 +126,17 @@ export default function Login() {
                     className="block w-full pl-10 pr-3 py-2 bg-gray-700/50 border border-gray-600 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white sm:text-sm"
                     placeholder="Enter your password"
                   />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <FaEyeSlash className="h-5 w-5 text-gray-500 hover:text-gray-300" />
+                    ) : (
+                      <FaEye className="h-5 w-5 text-gray-500 hover:text-gray-300" />
+                    )}
+                  </button>
                 </div>
               </div>
 

@@ -1,0 +1,74 @@
+// app/wallet/page.tsx
+'use client';
+
+import { useEffect,useState } from 'react';
+import PrivateLayout from '../../layouts/PrivateLayout';
+import DepositRequestForm from '@/components/DepositRequestForm';
+import DepositHistory from '@/components/DepositHistory';
+import { FaWallet, FaMoneyBillWave, FaHistory } from 'react-icons/fa';
+import { useAuth } from '@/contexts/AuthContext';
+import UserBalance from '@/components/UserBalance';
+export default function WalletPage() {
+  const [activeTab, setActiveTab] = useState<'deposit' | 'history'>('deposit');
+const { user, refreshBalance } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Refresh balance when page loads
+    refreshBalance().finally(() => {
+      setIsLoading(false);
+    });
+  }, [refreshBalance]);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+  return (
+      <PrivateLayout>
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold text-white flex items-center">
+              <FaWallet className="mr-3 text-blue-400" />
+              Wallet Management
+               <UserBalance />
+            </h1>
+          </div>
+
+          {/* Tabs */}
+          <div className="border-b border-gray-700">
+            <nav className="flex space-x-8">
+              <button
+                onClick={() => setActiveTab('deposit')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center ${
+                  activeTab === 'deposit'
+                    ? 'border-blue-500 text-blue-400'
+                    : 'border-transparent text-gray-400 hover:text-gray-300'
+                }`}
+              >
+                <FaMoneyBillWave className="mr-2" />
+                Request Deposit
+              </button>
+              <button
+                onClick={() => setActiveTab('history')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center ${
+                  activeTab === 'history'
+                    ? 'border-blue-500 text-blue-400'
+                    : 'border-transparent text-gray-400 hover:text-gray-300'
+                }`}
+              >
+                <FaHistory className="mr-2" />
+                Deposit History
+              </button>
+            </nav>
+          </div>
+
+          {/* Content */}
+          <div>
+            {activeTab === 'deposit' && <DepositRequestForm />}
+            {activeTab === 'history' && <DepositHistory />}
+          </div>
+        </div>
+      </PrivateLayout>
+  );
+}

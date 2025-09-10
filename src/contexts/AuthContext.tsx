@@ -1,15 +1,28 @@
-'use client';
+"use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, AuthResponse } from '@/services/api';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
+import { User, AuthResponse, apiService } from "@/services/api";
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (firstName: string, lastName: string, email: string, password: string) => Promise<void>;
+  register: (
+    firstName: string,
+    lastName: string,
+    email: string,
+    password: string
+  ) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
+  refreshUser: () => Promise<void>;
+  refreshBalance: () => Promise<number>; // New method
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -17,7 +30,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
@@ -33,66 +46,87 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     // Check if user is logged in on initial load
-    const storedToken = localStorage.getItem('authToken');
-    const storedUser = localStorage.getItem('user');
-    
+    const storedToken = localStorage.getItem("authToken");
+    const storedUser = localStorage.getItem("user");
+
     if (storedToken && storedUser) {
       setToken(storedToken);
-      setUser(JSON.parse(storedUser));
+      
+      // Parse user but don't trust the balance from localStorage
+      const parsedUser = JSON.parse(storedUser);
+      
+      // Fetch fresh balance from server
+      refreshBalance().then(freshBalance => {
+        setUser({
+          ...parsedUser,
+          balance: freshBalance
+        });
+      }).catch(error => {
+        console.error("Failed to fetch fresh balance:", error);
+        setUser(parsedUser); // Fallback to stored user
+      });
     }
-    
+
     setIsLoading(false);
   }, []);
 
+  const refreshBalance = async (): Promise<number> => {
+    try {
+      const response = await apiService.getBalance();
+      return response.balance;
+    } catch (error) {
+      console.error("Failed to refresh balance:", error);
+      throw error;
+    }
+  };
+
+  const refreshUser = async () => {
+    try {
+      const userData = await apiService.getProfile();
+      setUser(userData);
+      // Only store basic user info, don't rely on balance in localStorage
+      const { balance, ...userWithoutBalance } = userData;
+      localStorage.setItem("user", JSON.stringify(userWithoutBalance));
+    } catch (error) {
+      console.error("Failed to refresh user data:", error);
+    }
+  };
+
   const login = async (email: string, password: string) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      const data = await apiService.login({ email, password });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Login failed');
-      }
+      // Store token and basic user data (without balance)
+      localStorage.setItem("authToken", data.token);
+      const { balance, ...userWithoutBalance } = data.user;
+      localStorage.setItem("user", JSON.stringify(userWithoutBalance));
 
-      const data: AuthResponse = await response.json();
-      
-      // Store token and user data
-      localStorage.setItem('authToken', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      
       setToken(data.token);
-      setUser(data.user);
+      setUser(data.user); // But keep full user data in state
     } catch (error) {
       throw error;
     }
   };
 
-  const register = async (firstName: string, lastName: string, email: string, password: string) => {
+  const register = async (
+    firstName: string,
+    lastName: string,
+    email: string,
+    password: string
+  ) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ firstName, lastName, email, password }),
+      const data = await apiService.register({
+        firstName,
+        lastName,
+        email,
+        password,
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Registration failed');
-      }
+      // Store token and basic user data (without balance)
+      localStorage.setItem("authToken", data.token);
+      const { balance, ...userWithoutBalance } = data.user;
+      localStorage.setItem("user", JSON.stringify(userWithoutBalance));
 
-      const data: AuthResponse = await response.json();
-      
-      // Store token and user data
-      localStorage.setItem('authToken', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      
       setToken(data.token);
       setUser(data.user);
     } catch (error) {
@@ -101,14 +135,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("user");
     setToken(null);
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout, isLoading }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        login,
+        register,
+        logout,
+        isLoading,
+        refreshUser,
+        refreshBalance, // Add this new method
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
