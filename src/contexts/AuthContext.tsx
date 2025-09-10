@@ -70,15 +70,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading(false);
   }, []);
 
-  const refreshBalance = async (): Promise<number> => {
-    try {
-      const response = await apiService.getBalance();
-      return response.balance;
-    } catch (error) {
-      console.error("Failed to refresh balance:", error);
-      throw error;
-    }
-  };
+const refreshBalance = async (): Promise<number> => {
+  try {
+    const response = await apiService.getBalance();
+    const newBalance = response.balance;
+    
+    // Update the user state with the new balance
+    setUser(prevUser => {
+      if (prevUser) {
+        const updatedUser = { ...prevUser, balance: newBalance };
+        return updatedUser;
+      }
+      return prevUser;
+    });
+    
+    return newBalance;
+  } catch (error) {
+    console.error("Failed to refresh balance:", error);
+    throw error;
+  }
+};
 
   const refreshUser = async () => {
     try {
