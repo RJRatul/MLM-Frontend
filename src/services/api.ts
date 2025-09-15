@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // services/api.ts
 // const API_BASE_URL = 'http://localhost:5000/api';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
@@ -8,6 +9,7 @@ export interface User {
   firstName: string;
   lastName: string;
   balance: number;
+  aiStatus?: boolean;
   isAdmin?: boolean;
 }
 
@@ -94,7 +96,7 @@ class ApiService {
     }
   }
 
- private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const token = this.getTokenForEndpoint(endpoint);
     const url = `${API_BASE_URL}${endpoint}`;
 
@@ -118,7 +120,7 @@ class ApiService {
 
       if (!response.ok) {
         let errorMessage = `HTTP error ${response.status}: ${response.statusText}`;
-        
+
         try {
           const errorData = await response.json();
           errorMessage = errorData.message || errorMessage;
@@ -139,7 +141,7 @@ class ApiService {
       return response.json();
     } catch (error) {
       console.error('API Request failed:', error);
-      
+
       // Re-throw the error with a more descriptive message if it's not already an Error object
       if (error instanceof Error) {
         throw error;
@@ -180,18 +182,27 @@ class ApiService {
     return this.request<Deposit[]>('/deposits/pending');
   }
 
-async getAllDeposits(filters?: {
-  status?: string;
-  page?: number;
-  limit?: number;
-}): Promise<DepositsListResponse> {
-  const params = new URLSearchParams();
-  if (filters?.status) params.append('status', filters.status);
-  if (filters?.page) params.append('page', filters.page.toString());
-  if (filters?.limit) params.append('limit', filters.limit.toString());
+  async toggleAiStatus(): Promise<{
+    message: string;
+    aiStatus: boolean;
+  }> {
+    return this.request<{ message: string; aiStatus: boolean }>('/user/toggle-ai', {
+      method: 'PATCH',
+    });
+  }
 
-  return this.request<DepositsListResponse>(`/deposits?${params.toString()}`);
-}
+  async getAllDeposits(filters?: {
+    status?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<DepositsListResponse> {
+    const params = new URLSearchParams();
+    if (filters?.status) params.append('status', filters.status);
+    if (filters?.page) params.append('page', filters.page.toString());
+    if (filters?.limit) params.append('limit', filters.limit.toString());
+
+    return this.request<DepositsListResponse>(`/deposits?${params.toString()}`);
+  }
 
   async approveDeposit(depositId: string, adminNote?: string): Promise<DepositResponse> {
     return this.request<DepositResponse>(`/deposits/${depositId}/approve`, {
@@ -208,7 +219,14 @@ async getAllDeposits(filters?: {
   }
 
   async getProfile(): Promise<User> {
-    return this.request<User>('/auth/profile');
+    try {
+      return await this.request<User>('/user/profile'); // Updated endpoint
+    } catch (error: any) {
+      if (error.message.includes('404')) {
+        throw new Error('User profile not found. Please check the endpoint or authentication.');
+      }
+      throw error;
+    }
   }
 
   async getBalance(): Promise<{ balance: number }> {
