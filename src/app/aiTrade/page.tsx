@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import PrivateLayout from '@/layouts/PrivateLayout';
 import 'react-circular-progressbar/dist/styles.css';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
-import { FaRobot } from 'react-icons/fa';
+import { FaRobot, FaPowerOff } from 'react-icons/fa';
 import { apiService } from '@/services/api';
 
 export default function AiTrade() {
@@ -12,6 +12,7 @@ export default function AiTrade() {
   const [progress, setProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isActiveTime, setIsActiveTime] = useState(false);
+  const [timeStatus, setTimeStatus] = useState('');
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const timeCheckRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -28,36 +29,69 @@ export default function AiTrade() {
     fetchUserProfile();
   }, []);
 
-  // Check if current time is between 4:00 AM and 4:03 AM
-  const checkActiveTime = () => {
+  // Check time status and manage auto-deactivation
+  const checkTimeStatus = () => {
     const now = new Date();
     const hours = now.getHours();
     const minutes = now.getMinutes();
     
-    // Check if it's between 4:00 and 4:03
-    const isActive = hours === 4 && minutes >= 0 && minutes < 3;
-    setIsActiveTime(isActive);
+    // Check if it's activation time (5:00 - 5:03 AM)
+    const isActivationTime = hours === 5 && minutes >= 0 && minutes < 3;
     
-    // If it's after 4:03 but before 4:04, schedule a check for the next minute
-    if (hours === 4 && minutes === 3) {
+    // Check if it's deactivation time (5:10 AM)
+    const isDeactivationTime = hours === 5 && minutes >= 10;
+    
+    // Check if it's before activation time or after deactivation until next day
+    const isOutsideTradingWindow = (hours < 5) || (hours === 5 && minutes >= 3 && minutes < 10) || (hours > 5);
+    
+    setIsActiveTime(isActivationTime);
+    
+    if (isActivationTime) {
+      setTimeStatus('Activation window open');
+    } else if (isDeactivationTime && isActivated) {
+      // Auto-deactivate at 5:10 AM
+      handleAutoDeactivate();
+      setTimeStatus('Trading deactivated until tomorrow 5:00 AM');
+    } else if (isOutsideTradingWindow) {
+      setTimeStatus('Come back tomorrow at 5:00 AM');
+    } else {
+      setTimeStatus('Trading active');
+    }
+
+    // Schedule next check
+    if (hours === 5 && minutes === 3) {
       const secondsUntilNextMinute = 60 - now.getSeconds();
-      setTimeout(checkActiveTime, secondsUntilNextMinute * 1000);
+      setTimeout(checkTimeStatus, secondsUntilNextMinute * 1000);
+    }
+  };
+
+  const handleAutoDeactivate = async () => {
+    if (isActivated) {
+      try {
+        // Call API to deactivate if currently activated
+        const response = await apiService.toggleAiStatus();
+        if (!response.aiStatus) {
+          setIsActivated(false);
+        }
+      } catch (error) {
+        console.error('Failed to auto-deactivate AI status:', error);
+      }
     }
   };
 
   // Set up time checking interval
   useEffect(() => {
-    checkActiveTime(); // Initial check
+    checkTimeStatus(); // Initial check
     
     // Check every minute
-    timeCheckRef.current = setInterval(checkActiveTime, 60000);
+    timeCheckRef.current = setInterval(checkTimeStatus, 60000);
     
     return () => {
       if (timeCheckRef.current) {
         clearInterval(timeCheckRef.current);
       }
     };
-  }, []);
+  }, [isActivated]); // Add isActivated as dependency
 
   // Clear interval on component unmount
   useEffect(() => {
@@ -118,16 +152,19 @@ export default function AiTrade() {
 
         <div className="mb-4 text-center">
           <p className="text-gray-400">
-            Active only between 4:00 AM and 4:03 AM
+            Active only between 5:00 AM and 5:03 AM
+          </p>
+          <p className="text-gray-400 mt-2">
+            Auto-deactivation at 5:10 AM
           </p>
           <p className="text-gray-400 mt-2">
             Current time: {formatTime(new Date())}
           </p>
-          {!isActiveTime && (
-            <p className="text-red-400 mt-2 font-medium">
-              AI trading is currently unavailable
-            </p>
-          )}
+          <p className={`mt-2 font-medium ${
+            isActiveTime ? 'text-green-400' : 'text-red-400'
+          }`}>
+            {timeStatus}
+          </p>
         </div>
 
         <div
@@ -157,10 +194,8 @@ export default function AiTrade() {
           <div className="absolute inset-0 flex items-center justify-center">
             {isLoading ? (
               <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            ) : isActivated ? (
-              <span className="text-white text-sm font-bold">Activated</span>
             ) : (
-              <FaRobot className="w-12 h-12 text-white" />
+              <FaPowerOff className={`w-8 h-8 ${isActivated ? 'text-green-400' : 'text-white'}`} />
             )}
           </div>
         </div>
@@ -169,8 +204,8 @@ export default function AiTrade() {
           {isLoading 
             ? 'Processing...' 
             : isActiveTime
-            ? `Hold the AI button for 5 seconds to ${isActivated ? 'deactivate' : 'activate'} trading`
-            : 'Come back between 4:00 AM and 4:03 AM to activate AI trading'
+            ? `Hold the power button for 5 seconds to ${isActivated ? 'deactivate' : 'activate'} trading`
+            : 'Come back tomorrow at 5:00 AM to activate AI trading'
           }
         </p>
       </div>
