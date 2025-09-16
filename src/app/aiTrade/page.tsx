@@ -29,53 +29,21 @@ export default function AiTrade() {
     fetchUserProfile();
   }, []);
 
-  // Check time status and manage auto-deactivation
+  // Check time status - active from 5:00 AM to 5:00 PM
   const checkTimeStatus = () => {
     const now = new Date();
     const hours = now.getHours();
     const minutes = now.getMinutes();
     
-    // Check if it's activation time (5:00 - 5:03 AM)
-    const isActivationTime = hours === 5 && minutes >= 0 && minutes < 3;
-    
-    // Check if it's deactivation time (5:10 AM)
-    const isDeactivationTime = hours === 5 && minutes >= 10;
-    
-    // Check if it's before activation time or after deactivation until next day
-    const isOutsideTradingWindow = (hours < 5) || (hours === 5 && minutes >= 3 && minutes < 10) || (hours > 5);
+    // Check if it's activation time (5:00 AM - 5:00 PM)
+    const isActivationTime = (hours >= 5 && hours < 17) || (hours === 17 && minutes === 0);
     
     setIsActiveTime(isActivationTime);
     
     if (isActivationTime) {
-      setTimeStatus('Activation window open');
-    } else if (isDeactivationTime && isActivated) {
-      // Auto-deactivate at 5:10 AM
-      handleAutoDeactivate();
-      setTimeStatus('Trading deactivated until tomorrow 5:00 AM');
-    } else if (isOutsideTradingWindow) {
-      setTimeStatus('Come back tomorrow at 5:00 AM');
+      setTimeStatus('Trading window open');
     } else {
-      setTimeStatus('Trading active');
-    }
-
-    // Schedule next check
-    if (hours === 5 && minutes === 3) {
-      const secondsUntilNextMinute = 60 - now.getSeconds();
-      setTimeout(checkTimeStatus, secondsUntilNextMinute * 1000);
-    }
-  };
-
-  const handleAutoDeactivate = async () => {
-    if (isActivated) {
-      try {
-        // Call API to deactivate if currently activated
-        const response = await apiService.toggleAiStatus();
-        if (!response.aiStatus) {
-          setIsActivated(false);
-        }
-      } catch (error) {
-        console.error('Failed to auto-deactivate AI status:', error);
-      }
+      setTimeStatus('Come back tomorrow at 5:00 AM');
     }
   };
 
@@ -91,7 +59,7 @@ export default function AiTrade() {
         clearInterval(timeCheckRef.current);
       }
     };
-  }, [isActivated]); // Add isActivated as dependency
+  }, [isActivated]);
 
   // Clear interval on component unmount
   useEffect(() => {
@@ -152,10 +120,7 @@ export default function AiTrade() {
 
         <div className="mb-4 text-center">
           <p className="text-gray-400">
-            Active only between 5:00 AM and 5:03 AM
-          </p>
-          <p className="text-gray-400 mt-2">
-            Auto-deactivation at 5:10 AM
+            Active only between 5:00 AM and 5:00 PM
           </p>
           <p className="text-gray-400 mt-2">
             Current time: {formatTime(new Date())}
