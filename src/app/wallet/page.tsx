@@ -1,35 +1,15 @@
-// app/wallet/page.tsx - Fixed version
+// app/wallet/page.tsx - Improved version
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import PrivateLayout from '../../layouts/PrivateLayout';
 import DepositRequestForm from '@/components/DepositRequestForm';
 import DepositHistory from '@/components/DepositHistory';
 import { FaWallet, FaMoneyBillWave, FaHistory } from 'react-icons/fa';
-import { useAuth } from '@/contexts/AuthContext';
 import UserBalance from '@/components/UserBalance';
 
 export default function WalletPage() {
   const [activeTab, setActiveTab] = useState<'deposit' | 'history'>('deposit');
-  const { refreshBalance } = useAuth();
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    // Refresh balance when page loads
-    refreshBalance().finally(() => {
-      setIsLoading(false);
-    });
-  }, [refreshBalance]);
-
-  if (isLoading) {
-    return (
-      <PrivateLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-        </div>
-      </PrivateLayout>
-    );
-  }
 
   return (
     <PrivateLayout>

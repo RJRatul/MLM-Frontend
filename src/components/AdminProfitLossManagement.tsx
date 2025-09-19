@@ -1,36 +1,35 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// components/AdminPairManagement.tsx
 "use client";
 
 import { useState, useEffect } from "react";
 import Button from "@/components/Button";
 import { FaPlus, FaEdit, FaTrash, FaToggleOn, FaToggleOff } from "react-icons/fa";
-import { pairApiService, Pair } from "@/services/pairApi";
+import { profitRuleApiService, ProfitRule } from "../services/profitRuleApi";
 
-export default function AdminPairManagement() {
-  const [pairs, setPairs] = useState<Pair[]>([]);
+export default function AdminProfitLossManagement() {
+  const [rules, setRules] = useState<ProfitRule[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [selectedPair, setSelectedPair] = useState<Pair | null>(null);
+  const [selectedRule, setSelectedRule] = useState<ProfitRule | null>(null);
   const [formData, setFormData] = useState({
-    pairName: "",
-    svgImage: "",
-    isActive: true,
-    profitLoss: 0
+    minBalance: 0,
+    maxBalance: 0,
+    profit: 0,
+    isActive: true
   });
 
   useEffect(() => {
-    loadPairs();
+    loadProfitRules();
   }, []);
 
-  const loadPairs = async () => {
+  const loadProfitRules = async () => {
     try {
       setIsLoading(true);
-      const pairsData = await pairApiService.getAllPairs();
-      setPairs(pairsData);
+      const rulesData = await profitRuleApiService.getAllProfitRules();
+      setRules(rulesData);
     } catch (error) {
-      console.error("Failed to load pairs:", error);
+      console.error("Failed to load profit rules:", error);
     } finally {
       setIsLoading(false);
     }
@@ -39,60 +38,60 @@ export default function AdminPairManagement() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await pairApiService.createPair(formData);
+      await profitRuleApiService.createProfitRule(formData);
       setShowCreateModal(false);
-      setFormData({ pairName: "", svgImage: "", isActive: true, profitLoss: 0 });
-      await loadPairs();
+      setFormData({ minBalance: 0, maxBalance: 0, profit: 0, isActive: true });
+      await loadProfitRules();
     } catch (error: any) {
-      console.error("Failed to create pair:", error);
-      alert(error.message || "Failed to create pair");
+      console.error("Failed to create profit rule:", error);
+      alert(error.message || "Failed to create profit rule");
     }
   };
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedPair) return;
+    if (!selectedRule) return;
     
     try {
-      await pairApiService.updatePair(selectedPair._id, formData);
+      await profitRuleApiService.updateProfitRule(selectedRule._id, formData);
       setShowEditModal(false);
-      setSelectedPair(null);
-      await loadPairs();
+      setSelectedRule(null);
+      await loadProfitRules();
     } catch (error: any) {
-      console.error("Failed to update pair:", error);
-      alert(error.message || "Failed to update pair");
+      console.error("Failed to update profit rule:", error);
+      alert(error.message || "Failed to update profit rule");
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this pair?")) return;
+    if (!confirm("Are you sure you want to delete this profit rule?")) return;
     
     try {
-      await pairApiService.deletePair(id);
-      await loadPairs();
+      await profitRuleApiService.deleteProfitRule(id);
+      await loadProfitRules();
     } catch (error: any) {
-      console.error("Failed to delete pair:", error);
-      alert(error.message || "Failed to delete pair");
+      console.error("Failed to delete profit rule:", error);
+      alert(error.message || "Failed to delete profit rule");
     }
   };
 
   const handleToggleStatus = async (id: string) => {
     try {
-      await pairApiService.togglePairStatus(id);
-      await loadPairs();
+      await profitRuleApiService.toggleProfitRuleStatus(id);
+      await loadProfitRules();
     } catch (error: any) {
-      console.error("Failed to toggle pair status:", error);
-      alert(error.message || "Failed to toggle pair status");
+      console.error("Failed to toggle profit rule status:", error);
+      alert(error.message || "Failed to toggle profit rule status");
     }
   };
 
-  const openEditModal = (pair: Pair) => {
-    setSelectedPair(pair);
+  const openEditModal = (rule: ProfitRule) => {
+    setSelectedRule(rule);
     setFormData({
-      pairName: pair.pairName,
-      svgImage: pair.svgImage,
-      isActive: pair.isActive,
-      profitLoss: pair.profitLoss
+      minBalance: rule.minBalance,
+      maxBalance: rule.maxBalance,
+      profit: rule.profit,
+      isActive: rule.isActive
     });
     setShowEditModal(true);
   };
@@ -115,60 +114,57 @@ export default function AdminPairManagement() {
   return (
     <div className="bg-gray-800 rounded-lg shadow p-6">
       {/* Header */}
-      <div className="flex justify-end items-center mb-6">
-        {/* <h2 className="text-lg font-medium text-white">Trade Pairs Management</h2> */}
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-lg font-medium text-white">Profit/Loss Rules Management</h2>
         <Button
           onClick={() => setShowCreateModal(true)}
           variant="primary"
           size="sm"
           icon={<FaPlus />}
         >
-          Create Pair
+          Create Rule
         </Button>
       </div>
 
-      {/* Pairs Table */}
+      {/* Rules Table */}
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="border-b border-gray-700">
-              <th className="px-4 py-3 text-left text-sm text-gray-400">Pair Name</th>
-              <th className="px-4 py-3 text-left text-sm text-gray-400">SVG Preview</th>
-              <th className="px-4 py-3 text-left text-sm text-gray-400">P/L</th>
+              <th className="px-4 py-3 text-left text-sm text-gray-400">Min Balance</th>
+              <th className="px-4 py-3 text-left text-sm text-gray-400">Max Balance</th>
+              <th className="px-4 py-3 text-left text-sm text-gray-400">Profit/Loss Amount</th>
               <th className="px-4 py-3 text-left text-sm text-gray-400">Status</th>
               <th className="px-4 py-3 text-left text-sm text-gray-400">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {pairs.map((pair) => (
-              <tr key={pair._id} className="border-b border-gray-700 hover:bg-gray-700/50">
-                <td className="px-4 py-3 text-white font-medium">
-                  {pair.pairName}
+            {rules.map((rule) => (
+              <tr key={rule._id} className="border-b border-gray-700 hover:bg-gray-700/50">
+                <td className="px-4 py-3 text-white font-mono">
+                  ${rule.minBalance}
+                </td>
+                <td className="px-4 py-3 text-white font-mono">
+                  ${rule.maxBalance}
                 </td>
                 <td className="px-4 py-3">
-                  <div 
-                    className="w-8 h-8"
-                    dangerouslySetInnerHTML={{ __html: pair.svgImage }}
-                  />
-                </td>
-                <td className="px-4 py-3">
-                  <span className={`font-mono ${pair.profitLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    {pair.profitLoss >= 0 ? '+' : ''}{pair.profitLoss}%
+                  <span className={`font-mono ${rule.profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    {rule.profit >= 0 ? '+' : ''}${rule.profit}
                   </span>
                 </td>
                 <td className="px-4 py-3">
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    pair.isActive 
+                    rule.isActive 
                       ? 'bg-green-500/10 text-green-500 border border-green-500' 
                       : 'bg-gray-500/10 text-gray-500 border border-gray-500'
                   }`}>
-                    {pair.isActive ? 'Active' : 'Inactive'}
+                    {rule.isActive ? 'Active' : 'Inactive'}
                   </span>
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex space-x-2">
                     <Button
-                      onClick={() => openEditModal(pair)}
+                      onClick={() => openEditModal(rule)}
                       variant="secondary"
                       size="sm"
                       icon={<FaEdit />}
@@ -176,15 +172,15 @@ export default function AdminPairManagement() {
                       Edit
                     </Button>
                     <Button
-                      onClick={() => handleToggleStatus(pair._id)}
+                      onClick={() => handleToggleStatus(rule._id)}
                       variant="secondary"
                       size="sm"
-                      icon={pair.isActive ? <FaToggleOff /> : <FaToggleOn />}
+                      icon={rule.isActive ? <FaToggleOff /> : <FaToggleOn />}
                     >
-                      {pair.isActive ? 'Deactivate' : 'Activate'}
+                      {rule.isActive ? 'Deactivate' : 'Activate'}
                     </Button>
                     <Button
-                      onClick={() => handleDelete(pair._id)}
+                      onClick={() => handleDelete(rule._id)}
                       variant="danger"
                       size="sm"
                       icon={<FaTrash />}
@@ -203,47 +199,51 @@ export default function AdminPairManagement() {
       {showCreateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-medium text-white mb-4">Create New Pair</h3>
+            <h3 className="text-lg font-medium text-white mb-4">Create New Profit/Loss Rule</h3>
             <form onSubmit={handleCreate}>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Pair Name
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.pairName}
-                    onChange={(e) => setFormData({ ...formData, pairName: e.target.value })}
-                    className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="e.g., BTC/USD"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    SVG Image Code
-                  </label>
-                  <textarea
-                    required
-                    value={formData.svgImage}
-                    onChange={(e) => setFormData({ ...formData, svgImage: e.target.value })}
-                    className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    rows={4}
-                    placeholder="Paste SVG code here..."
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Profit/Loss (%)
+                    Minimum Balance ($)
                   </label>
                   <input
                     type="number"
-                    step="0.01"
                     required
-                    value={formData.profitLoss}
-                    onChange={(e) => setFormData({ ...formData, profitLoss: parseFloat(e.target.value) })}
+                    min="0"
+                    step="0.01"
+                    value={formData.minBalance}
+                    onChange={(e) => setFormData({ ...formData, minBalance: parseFloat(e.target.value) })}
                     className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="e.g., 2.5 or -1.2"
+                    placeholder="0.00"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Maximum Balance ($)
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min="0"
+                    step="0.01"
+                    value={formData.maxBalance}
+                    onChange={(e) => setFormData({ ...formData, maxBalance: parseFloat(e.target.value) })}
+                    className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="0.00"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Profit/Loss Amount ($)
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    step="0.01"
+                    value={formData.profit}
+                    onChange={(e) => setFormData({ ...formData, profit: parseFloat(e.target.value) })}
+                    className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Can be positive or negative"
                   />
                 </div>
                 <div className="flex items-center">
@@ -273,46 +273,50 @@ export default function AdminPairManagement() {
       )}
 
       {/* Edit Modal */}
-      {showEditModal && selectedPair && (
+      {showEditModal && selectedRule && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-medium text-white mb-4">Edit Pair</h3>
+            <h3 className="text-lg font-medium text-white mb-4">Edit Profit/Loss Rule</h3>
             <form onSubmit={handleUpdate}>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Pair Name
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.pairName}
-                    onChange={(e) => setFormData({ ...formData, pairName: e.target.value })}
-                    className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    SVG Image Code
-                  </label>
-                  <textarea
-                    required
-                    value={formData.svgImage}
-                    onChange={(e) => setFormData({ ...formData, svgImage: e.target.value })}
-                    className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    rows={4}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Profit/Loss (%)
+                    Minimum Balance ($)
                   </label>
                   <input
                     type="number"
-                    step="0.01"
                     required
-                    value={formData.profitLoss}
-                    onChange={(e) => setFormData({ ...formData, profitLoss: parseFloat(e.target.value) })}
+                    min="0"
+                    step="0.01"
+                    value={formData.minBalance}
+                    onChange={(e) => setFormData({ ...formData, minBalance: parseFloat(e.target.value) })}
+                    className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Maximum Balance ($)
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min="0"
+                    step="0.01"
+                    value={formData.maxBalance}
+                    onChange={(e) => setFormData({ ...formData, maxBalance: parseFloat(e.target.value) })}
+                    className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Profit/Loss Amount ($)
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    step="0.01"
+                    value={formData.profit}
+                    onChange={(e) => setFormData({ ...formData, profit: parseFloat(e.target.value) })}
                     className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>

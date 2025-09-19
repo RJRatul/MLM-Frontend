@@ -16,7 +16,10 @@ import {
   FaBars,
   FaTimes,
   FaCog,
-  FaShieldAlt
+  FaShieldAlt,
+  FaPercentage,
+  FaChartBar,
+  FaClock  // Add this import for the schedule icon
 } from 'react-icons/fa';
 import { adminLogout } from '@/utils/adminAuth';
 
@@ -121,6 +124,34 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <FaCreditCard className="w-5 h-5" />
                 <span className="ml-3">Withdrawal</span>
               </Link>
+
+              {/* Profit/Loss Rules Menu Item */}
+              <Link 
+                href="/admin/profit-loss" 
+                className={`flex items-center px-4 py-3 rounded-lg transition-colors duration-200 ${
+                  isActive('/admin/profit-loss') 
+                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg' 
+                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                }`}
+                onClick={() => setSidebarOpen(false)}
+              >
+                <FaPercentage className="w-5 h-5" />
+                <span className="ml-3">Profit/Loss Rules</span>
+              </Link>
+
+              {/* Profit Loss Schedule Menu Item */}
+              <Link 
+                href="/admin/profit-loss-schedule" 
+                className={`flex items-center px-4 py-3 rounded-lg transition-colors duration-200 ${
+                  isActive('/admin/profit-loss-schedule') 
+                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg' 
+                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                }`}
+                onClick={() => setSidebarOpen(false)}
+              >
+                <FaClock className="w-5 h-5" />
+                <span className="ml-3">Profit Loss Schedule</span>
+              </Link>
               
               <Link 
                 href="/admin/settings" 
@@ -176,6 +207,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   {pathname === '/admin/trade-pair' && 'Trade Pair Settings'}
                   {pathname === '/admin/deposit' && 'Deposit Management'}
                   {pathname === '/admin/withdrawal' && 'Withdrawal Management'}
+                  {pathname === '/admin/profit-loss' && 'Profit/Loss Rules'}
+                  {pathname === '/admin/profit-loss-schedule' && 'Profit Loss Schedule'} {/* Add this line */}
                   {pathname === '/admin/settings' && 'System Settings'}
                 </h1>
               </div>

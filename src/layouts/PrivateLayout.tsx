@@ -17,6 +17,7 @@ import {
   FaBars,
   FaTimes,
 } from "react-icons/fa";
+import UserBalance from "@/components/UserBalance";
 
 export default function DashboardLayout({
   children,
@@ -187,6 +188,10 @@ export default function DashboardLayout({
 
               {/* Right side items */}
               <div className="flex items-center space-x-4">
+                <Link href="/wallet" passHref>
+                    <UserBalance />
+                </Link>
+
                 {/* AI Button */}
                 <Link href="/aiTrade" passHref>
                   <Button
