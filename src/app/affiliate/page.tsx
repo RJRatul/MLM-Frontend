@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 // app/affiliate/page.tsx (updated)
 "use client";
 import PrivateLayout from "@/layouts/PrivateLayout";
@@ -15,6 +16,7 @@ import {
   FaArrowRight,
   FaSync,
 } from "react-icons/fa";
+import { User } from "@/services/api";
 
 // Define proper TypeScript interfaces
 interface CommissionLevel {
@@ -103,76 +105,56 @@ export default function Affiliate() {
   };
 
   // Calculate progress towards next milestone
-  const getProgressData = () => {
-    if (!user)
-      return {
-        current: 0,
-        target: 8,
-        percentage: 0,
-        nextMilestone: "5 referrals",
-      };
+  // Simplified progress calculation
+interface ProgressData {
+  current: number;
+  target: number;
+  percentage: number;
+  nextMilestone: string;
+}
 
-    const currentLevel = user.level || 0;
-    const currentTier = user.tier || 3;
-    const referralCount = user.referralCount || 0;
-    const levelData = getCommissionData(currentLevel);
+const getProgressData = (user: User | null): ProgressData => {
+  if (!user) {
+    return { current: 0, target: 5, percentage: 0, nextMilestone: "5 referrals" };
+  }
 
-    // For Base Level (Level 0)
-    if (currentLevel === 0) {
-      if (!user.commissionUnlocked) {
-        return {
-          current: referralCount,
-          target: 5,
-          percentage: Math.min(100, (referralCount / 5) * 100),
-          nextMilestone: "Unlock Commission (5 referrals)",
-        };
-      } else if (currentTier === 3) {
-        return {
-          current: referralCount,
-          target: 6,
-          percentage: Math.min(100, ((referralCount - 5) / (6 - 5)) * 100),
-          nextMilestone: "Tier 2 (6 referrals)",
-        };
-      } else if (currentTier === 2) {
-        return {
-          current: referralCount,
-          target: 7,
-          percentage: Math.min(100, ((referralCount - 6) / (7 - 6)) * 100),
-          nextMilestone: "Tier 1 (7 referrals)",
-        };
-      } else if (currentTier === 1) {
-        return {
-          current: referralCount,
-          target: 8,
-          percentage: Math.min(100, ((referralCount - 7) / (8 - 7)) * 100),
-          nextMilestone: "Level 1 (8 referrals)",
-        };
+  const referralCount = user.referralCount || 0;
+  const level = user.level || 0;
+  const tier = user.tier || 3;
+  
+  let target = 5;
+  let nextMilestone = "Unlock Commission (5 referrals)";
+
+  if (!user.commissionUnlocked) {
+    target = 5;
+    nextMilestone = "Unlock Commission (5 referrals)";
+  } else {
+    const levelData = COMMISSION_STRUCTURE[level];
+    if (levelData) {
+      if (tier === 3) {
+        target = 6;
+        nextMilestone = "Tier 2 (6 referrals)";
+      } else if (tier === 2) {
+        target = 7;
+        nextMilestone = "Tier 1 (7 referrals)";
+      } else if (tier === 1) {
+        target = levelData.nextLevel || 8;
+        nextMilestone = `Level ${level + 1} (${target} referrals)`;
       }
     }
+  }
 
-    // For other levels
-    const nextLevelThreshold = levelData.nextLevel || 8;
-    const currentThreshold =
-      currentLevel === 0
-        ? 8
-        : COMMISSION_STRUCTURE[currentLevel - 1]?.nextLevel || 8;
-
-    return {
-      current: referralCount,
-      target: nextLevelThreshold,
-      percentage: Math.min(
-        100,
-        ((referralCount - currentThreshold) /
-          (nextLevelThreshold - currentThreshold)) *
-          100
-      ),
-      nextMilestone: `Level ${
-        currentLevel + 1
-      } (${nextLevelThreshold} referrals)`,
-    };
+  const percentage = Math.min(100, (referralCount / target) * 100);
+  
+  return { 
+    current: referralCount, 
+    target, 
+    percentage, 
+    nextMilestone 
   };
+};
 
-  const progressData = getProgressData();
+  const progressData = getProgressData(user);
 
   // Get tier badge color and icon
   const getTierBadge = (tier: number) => {
@@ -299,9 +281,7 @@ export default function Affiliate() {
                   <p className="text-sm opacity-90">Current Tier</p>
                   <p className="text-2xl font-bold">{tierBadge.label}</p>
                   <p className="text-sm">
-                    {userCommissionData[user?.tier as keyof CommissionLevel] ||
-                      0}
-                    % Commission
+                    {userCommissionData[user?.tier as 1 | 2 | 3] || 0}% Commission
                   </p>
                 </div>
                 <TierIcon className="text-3xl opacity-80" />
@@ -337,13 +317,13 @@ export default function Affiliate() {
             </div>
             <div className="bg-gray-700/50 rounded-lg p-3">
               <p className="text-2xl font-bold text-green-400">
-                ${user?.referralEarnings || 0}
+                ${(user?.referralEarnings || 0).toFixed(2)}
               </p>
               <p className="text-xs text-gray-400">Earned</p>
             </div>
             <div className="bg-gray-700/50 rounded-lg p-3">
               <p className="text-2xl font-bold text-blue-400">
-                {userCommissionData[user?.tier as keyof CommissionLevel] || 0}%
+                {userCommissionData[user?.tier as 1 | 2 | 3] || 0}%
               </p>
               <p className="text-xs text-gray-400">Rate</p>
             </div>
@@ -366,62 +346,13 @@ export default function Affiliate() {
                 <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
                 <p className="text-green-300 text-sm">
                   ✅ Commission feature unlocked! You are earning{" "}
-                  {userCommissionData[user?.tier as keyof CommissionLevel] || 0}
+                  {userCommissionData[user?.tier as 1 | 2 | 3] || 0}
                   % on referrals.
                 </p>
               </div>
             </div>
           )}
         </div>
-
-        {/* Next Level Preview */}
-        {user && user.level !== undefined && user.level < 5 && (
-          <div className="bg-gray-800 rounded-lg p-6 mb-6">
-            <h3 className="text-md font-semibold text-white mb-4">
-              Next Level Preview
-            </h3>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="text-center">
-                  <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center">
-                    <span className="text-blue-400 font-bold text-lg">
-                      {user.level}
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-400 mt-1">Current</p>
-                </div>
-
-                <FaArrowRight className="text-gray-500 text-xl" />
-
-                <div className="text-center">
-                  <div className="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center">
-                    <span className="text-purple-400 font-bold text-lg">
-                      {user.level + 1}
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-400 mt-1">Next</p>
-                </div>
-              </div>
-
-              <div className="text-right">
-                <p className="text-sm text-gray-300">
-                  {progressData.target - progressData.current} more referrals to
-                  reach{" "}
-                  {COMMISSION_STRUCTURE[
-                    (user.level + 1) as keyof typeof COMMISSION_STRUCTURE
-                  ]?.label || "Next Level"}
-                </p>
-                <p className="text-xs text-gray-400">
-                  Commission rate:{" "}
-                  {COMMISSION_STRUCTURE[
-                    (user.level + 1) as keyof typeof COMMISSION_STRUCTURE
-                  ]?.[3] || 0}
-                  %
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Referral Link Section */}
         <div className="bg-gray-800 rounded-lg p-6 mb-6">
