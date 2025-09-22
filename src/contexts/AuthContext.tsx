@@ -17,12 +17,13 @@ interface AuthContextType {
     firstName: string,
     lastName: string,
     email: string,
-    password: string
+    password: string,
+    referralCode?: string // New optional parameter
   ) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
   refreshUser: () => Promise<void>;
-  refreshBalance: () => Promise<number>; // New method
+  refreshBalance: () => Promise<number>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -119,31 +120,33 @@ const refreshBalance = async (): Promise<number> => {
     }
   };
 
-  const register = async (
-    firstName: string,
-    lastName: string,
-    email: string,
-    password: string
-  ) => {
-    try {
-      const data = await apiService.register({
-        firstName,
-        lastName,
-        email,
-        password,
-      });
+const register = async (
+  firstName: string,
+  lastName: string,
+  email: string,
+  password: string,
+  referralCode?: string // Add optional parameter
+) => {
+  try {
+    const data = await apiService.register({
+      firstName,
+      lastName,
+      email,
+      password,
+      referralCode, // Pass referral code to API
+    });
 
-      // Store token and basic user data (without balance)
-      localStorage.setItem("authToken", data.token);
-      const { balance, ...userWithoutBalance } = data.user;
-      localStorage.setItem("user", JSON.stringify(userWithoutBalance));
+    // Store token and basic user data (without balance)
+    localStorage.setItem("authToken", data.token);
+    const { balance, ...userWithoutBalance } = data.user;
+    localStorage.setItem("user", JSON.stringify(userWithoutBalance));
 
-      setToken(data.token);
-      setUser(data.user);
-    } catch (error) {
-      throw error;
-    }
-  };
+    setToken(data.token);
+    setUser(data.user);
+  } catch (error) {
+    throw error;
+  }
+};
 
   const logout = () => {
     localStorage.removeItem("authToken");

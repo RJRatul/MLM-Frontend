@@ -1,9 +1,10 @@
+// app/register/page.tsx
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react"; // Added useEffect
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation"; // Added useSearchParams
 import AuthGuard from "@/components/AuthGuard";
 import Button from "@/components/Button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,8 +15,8 @@ import {
   FaLock,
   FaUserPlus,
   FaSignInAlt,
+  FaGift, // Added for referral icon
 } from "react-icons/fa";
-import { FaCoins } from "react-icons/fa6";
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -23,11 +24,21 @@ export default function Register() {
     lastName: "",
     email: "",
     password: "",
+    referralCode: "", // New field
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
+  const searchParams = useSearchParams(); // For getting referral code from URL
   const { register } = useAuth();
+
+  // Pre-fill referral code from URL if present
+  useEffect(() => {
+    const refCode = searchParams.get('ref');
+    if (refCode) {
+      setFormData(prev => ({ ...prev, referralCode: refCode }));
+    }
+  }, [searchParams]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -43,7 +54,8 @@ export default function Register() {
         formData.firstName,
         formData.lastName,
         formData.email,
-        formData.password
+        formData.password,
+        formData.referralCode || undefined // Pass referral code if provided
       );
       router.push("/trade");
     } catch (error: any) {
@@ -71,7 +83,6 @@ export default function Register() {
         <div className="w-full max-w-md">
           {/* Logo and heading */}
           <div className="text-center mb-8">
-            
             <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
               Create your BeeCoin account
             </h2>
@@ -188,6 +199,33 @@ export default function Register() {
                     placeholder="Create a secure password"
                   />
                 </div>
+              </div>
+
+              {/* New Referral Code Field */}
+              <div>
+                <label
+                  htmlFor="referralCode"
+                  className="block text-sm font-medium text-gray-300 mb-2"
+                >
+                  Referral Code (Optional)
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FaGift className="h-5 w-5 text-gray-500" />
+                  </div>
+                  <input
+                    id="referralCode"
+                    name="referralCode"
+                    type="text"
+                    value={formData.referralCode}
+                    onChange={handleChange}
+                    className="block w-full pl-10 pr-3 py-2 bg-gray-700/50 border border-gray-600 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white sm:text-sm"
+                    placeholder="Enter referral code if you have one"
+                  />
+                </div>
+                <p className="text-xs text-gray-400 mt-1">
+                  Get bonus when you sign up with a referral code
+                </p>
               </div>
 
               <div>

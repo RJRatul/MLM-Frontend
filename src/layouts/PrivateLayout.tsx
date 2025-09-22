@@ -16,6 +16,7 @@ import {
   FaRobot,
   FaBars,
   FaTimes,
+  FaHandshake, // Added affiliate icon
 } from "react-icons/fa";
 import UserBalance from "@/components/UserBalance";
 
@@ -130,6 +131,19 @@ export default function DashboardLayout({
               >
                 <FaGift className="w-5 h-5" />
                 <span className="ml-3">Referral Bonus</span>
+              </Link>
+
+              {/* New Affiliate Menu Item */}
+              <Link
+                href="/affiliate"
+                className={`flex items-center px-4 py-3 rounded-lg transition-colors duration-200 ${
+                  isActive("/affiliate")
+                    ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
+                    : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                }`}
+              >
+                <FaHandshake className="w-5 h-5" />
+                <span className="ml-3">Affiliate</span>
               </Link>
 
               <Link

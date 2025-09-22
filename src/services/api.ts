@@ -11,6 +11,13 @@ export interface User {
   balance: number;
   aiStatus?: boolean;
   isAdmin?: boolean;
+  referralCode?: string;
+  referralCount?: number;
+  referralEarnings?: number;
+  level?: number;
+  tier?: number;
+  commissionUnlocked?: boolean;
+  commissionRate?: number;
 }
 
 export interface AuthResponse {
@@ -28,6 +35,7 @@ export interface RegisterData {
   lastName: string;
   email: string;
   password: string;
+  referralCode?: string;
 }
 
 export interface Deposit {
