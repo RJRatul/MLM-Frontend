@@ -1,304 +1,245 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-'use client';
-import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
-import PrivateLayout from '@/layouts/PrivateLayout';
-import UserPairsList from '@/components/UserPairsList';
-import TradingChart from '@/components/TradingChart';
-import Modal from '@/components/Modal';
-import { FaPlus, FaPause, FaPlay, FaSync } from 'react-icons/fa';
-import { getInitialDataForPair, CandleData } from '@/utils/generateChartData';
+"use client";
+
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import PrivateLayout from "@/layouts/PrivateLayout";
+import TradingChart, { ChartHandle } from "@/components/TradingChart";
+import { getInitialDataForPair, CandleData } from "@/utils/generateChartData";
+import Link from "next/link";
+import Button from "@/components/Button";
+import { FaPlus, FaRobot } from "react-icons/fa";
+import UserPairsList from "@/components/UserPairsList";
 
 export default function Trade() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
-  const [isPairsModalOpen, setIsPairsModalOpen] = useState(false);
-  const [selectedPair, setSelectedPair] = useState('BTC/USD');
+
+  const [selectedPair, setSelectedPair] = useState("BTC/USD");
   const [chartData, setChartData] = useState<CandleData[]>([]);
-  const [isAnimating, setIsAnimating] = useState(true);
   const [currentPrice, setCurrentPrice] = useState(0);
-  const [currentTrend, setCurrentTrend] = useState<'up' | 'down' | 'neutral'>('neutral');
-  const animationRef = useRef<NodeJS.Timeout | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [currentTrend, setCurrentTrend] =
+    useState<"up" | "down" | "neutral">("neutral");
+
   const currentCandleRef = useRef<CandleData | null>(null);
   const candleStartTimeRef = useRef<number>(0);
+  const animationRef = useRef<number | null>(null);
+  const chartRef = useRef<ChartHandle | null>(null);
+  const lastUpdateTimeRef = useRef<number>(0);
 
-  // Base prices for different pairs
-  const basePrices: { [key: string]: number } = {
-    'BTC/USD': 50000,
-    'ETH/USD': 3000,
-    'XRP/USD': 0.5,
-    'ADA/USD': 0.4,
-    'DOT/USD': 20,
+  const basePrices: Record<string, number> = {
+    "BTC/USD": 500,
+    "ETH/USD": 300,
+    "XRP/USD": 0.5,
+    "ADA/USD": 0.4,
+    "DOT/USD": 20,
   };
 
+  const CANDLE_DURATION = 60_000; // 1 minute
+  const MAX_CANDLES = 500;
+
+  // initialize chart data when pair changes
   useEffect(() => {
-    // Generate initial chart data for the selected pair
-    const initialData = getInitialDataForPair(selectedPair);
-    setChartData(initialData);
-    
-    // Set initial current price
-    const basePrice = basePrices[selectedPair] || 100;
-    setCurrentPrice(basePrice);
-    
-    // Initialize first current candle
-    const lastCandle = initialData[initialData.length - 1];
+    const initial = getInitialDataForPair(selectedPair);
+    setChartData(initial);
+
+    const base = basePrices[selectedPair] || 100;
+    setCurrentPrice(base);
+
+    const last = initial[initial.length - 1];
     currentCandleRef.current = {
       time: Math.floor(Date.now() / 1000),
-      open: lastCandle.close,
-      high: lastCandle.close,
-      low: lastCandle.close,
-      close: lastCandle.close,
+      open: last.close,
+      high: last.close,
+      low: last.close,
+      close: last.close,
     };
     candleStartTimeRef.current = Date.now();
+    lastUpdateTimeRef.current = Date.now();
   }, [selectedPair]);
 
+  // animation loop
   useEffect(() => {
-    if (!isAnimating) return;
-
-    const animateCurrentCandle = () => {
+    const animate = () => {
       const now = Date.now();
+      if (now - lastUpdateTimeRef.current < 500) {
+        animationRef.current = requestAnimationFrame(animate);
+        return;
+      }
+      lastUpdateTimeRef.current = now;
+
+      if (!currentCandleRef.current) {
+        animationRef.current = requestAnimationFrame(animate);
+        return;
+      }
+
       const elapsed = now - candleStartTimeRef.current;
-      const timeRemaining = 60000 - elapsed; // 1 minute candle
+      const base = basePrices[selectedPair] || 100;
+      const volatility = base * 0.002;
 
-      if (timeRemaining <= 0) {
-        // Finalize current candle and start new one
-        if (currentCandleRef.current) {
-          const finalizedCandle = { ...currentCandleRef.current };
-          
-          setChartData(prevData => {
-            // Add finalized candle and remove oldest
-            const newData = [...prevData.slice(1), finalizedCandle];
-            return newData;
-          });
+      if (elapsed >= CANDLE_DURATION) {
+        // push finished candle into history
+        const finishedCandle = { ...currentCandleRef.current };
 
-          // Start new candle
-          const newCandle: CandleData = {
-            time: Math.floor(now / 1000),
-            open: finalizedCandle.close,
-            high: finalizedCandle.close,
-            low: finalizedCandle.close,
-            close: finalizedCandle.close,
-          };
-          
-          currentCandleRef.current = newCandle;
-          candleStartTimeRef.current = now;
-        }
+        setChartData((prev) => {
+          const updated = [...prev, finishedCandle];
+          if (updated.length > MAX_CANDLES) updated.shift();
+          return updated;
+        });
+
+        chartRef.current?.updateCurrentCandle?.(finishedCandle);
+
+        // start new candle
+        const lastClose = finishedCandle.close;
+        currentCandleRef.current = {
+          time: Math.floor(now / 1000),
+          open: lastClose,
+          high: lastClose,
+          low: lastClose,
+          close: lastClose,
+        };
+        candleStartTimeRef.current = now;
       } else {
-        // Animate current candle
-        if (currentCandleRef.current) {
-          const volatility = basePrices[selectedPair] * 0.002; // 0.2% volatility
-          
-          // Determine price movement direction
-          const random = Math.random();
-          let priceChange = 0;
-          let newTrend: typeof currentTrend = 'neutral';
+        // live candle update
+        const r = Math.random();
+        let priceChange = 0;
+        let newTrend: typeof currentTrend = "neutral";
 
-          if (random < 0.4) {
-            // Up movement (40% chance)
-            priceChange = (Math.random() * volatility * 0.8);
-            newTrend = 'up';
-          } else if (random < 0.7) {
-            // Down movement (30% chance)
-            priceChange = -(Math.random() * volatility * 0.8);
-            newTrend = 'down';
-          } else {
-            // Neutral (30% chance)
-            priceChange = (Math.random() - 0.5) * volatility * 0.5;
-            newTrend = 'neutral';
-          }
-
-          setCurrentTrend(newTrend);
-
-          const newPrice = currentCandleRef.current.close + priceChange;
-          setCurrentPrice(newPrice);
-
-          // Update current candle
-          const updatedCandle: CandleData = {
-            ...currentCandleRef.current,
-            close: newPrice,
-            high: Math.max(currentCandleRef.current.high, newPrice),
-            low: Math.min(currentCandleRef.current.low, newPrice),
-          };
-
-          currentCandleRef.current = updatedCandle;
-
-          // Update chart with animated candle (for visualization)
-          setChartData(prevData => {
-            const currentData = [...prevData];
-            if (currentData.length > 0) {
-              currentData[currentData.length - 1] = updatedCandle;
-            }
-            return currentData;
-          });
+        if (r < 0.4) {
+          priceChange = Math.random() * volatility * 0.8;
+          newTrend = "up";
+        } else if (r < 0.7) {
+          priceChange = -(Math.random() * volatility * 0.8);
+          newTrend = "down";
+        } else {
+          priceChange = (Math.random() - 0.5) * volatility * 0.5;
         }
+        setCurrentTrend(newTrend);
+
+        const newPrice = Math.max(
+          0.01,
+          Math.min(999, currentCandleRef.current.close + priceChange)
+        );
+        setCurrentPrice(newPrice);
+
+        const updated = {
+          ...currentCandleRef.current,
+          close: newPrice,
+          high: Math.max(currentCandleRef.current.high, newPrice),
+          low: Math.min(currentCandleRef.current.low, newPrice),
+        };
+        currentCandleRef.current = updated;
+
+        chartRef.current?.updateCurrentCandle(updated);
       }
+
+      animationRef.current = requestAnimationFrame(animate);
     };
 
-    // Update every 100ms for smooth animation (10 times per second)
-    animationRef.current = setInterval(animateCurrentCandle, 100);
-
+    animationRef.current = requestAnimationFrame(animate);
     return () => {
-      if (animationRef.current) {
-        clearInterval(animationRef.current);
-      }
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
-  }, [isAnimating, selectedPair]);
+  }, [selectedPair]);
 
-  const handleLogout = () => {
-    logout();
-    router.push('/');
+  const handlePairSelect = (pairName: string) => {
+    setSelectedPair(pairName);
+    setIsDrawerOpen(false);
   };
 
-  const handlePairSelect = (pair: string) => {
-    setSelectedPair(pair);
-    setIsPairsModalOpen(false);
-    // Reset animation with new pair data
-    const newData = getInitialDataForPair(pair);
-    setChartData(newData);
-    
-    const basePrice = basePrices[pair] || 100;
-    setCurrentPrice(basePrice);
-    
-    // Reset current candle
-    const lastCandle = newData[newData.length - 1];
-    currentCandleRef.current = {
-      time: Math.floor(Date.now() / 1000),
-      open: lastCandle.close,
-      high: lastCandle.close,
-      low: lastCandle.close,
-      close: lastCandle.close,
-    };
-    candleStartTimeRef.current = Date.now();
-  };
-
-  const toggleAnimation = () => {
-    setIsAnimating(!isAnimating);
-  };
-
-  const resetAnimation = () => {
-    const newData = getInitialDataForPair(selectedPair);
-    setChartData(newData);
-    
-    const basePrice = basePrices[selectedPair] || 100;
-    setCurrentPrice(basePrice);
-    
-    // Reset current candle
-    const lastCandle = newData[newData.length - 1];
-    currentCandleRef.current = {
-      time: Math.floor(Date.now() / 1000),
-      open: lastCandle.close,
-      high: lastCandle.close,
-      low: lastCandle.close,
-      close: lastCandle.close,
-    };
-    candleStartTimeRef.current = Date.now();
-    
-    if (!isAnimating) {
-      setIsAnimating(true);
-    }
-  };
-
-  // Calculate time remaining for current candle
   const getTimeRemaining = () => {
     const elapsed = Date.now() - candleStartTimeRef.current;
-    const remaining = Math.max(0, 60000 - elapsed);
+    const remaining = Math.max(0, CANDLE_DURATION - elapsed);
     return Math.ceil(remaining / 1000);
   };
 
   return (
     <PrivateLayout>
-      <div className="min-h-screen bg-gray-900 p-4">
-        <div className="container mx-auto">
-          {/* Header with controls */}
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold text-white">Trading</h1>
-            <div className="flex items-center space-x-4">
-              {/* Current price and trend indicator */}
-              <div className={`px-3 py-2 rounded-lg ${
-                currentTrend === 'up' ? 'bg-green-600' : 
-                currentTrend === 'down' ? 'bg-red-600' : 'bg-gray-600'
-              }`}>
+      <div className="min-h-screen bg-gray-900 p-4 relative">
+        <div className="flex flex-col gap-6">
+          <div className="flex items-center justify-between">
+            <Button
+              variant="primary"
+              size="sm"
+              icon={<FaPlus className="w-4 h-4" />}
+              className="rounded-full"
+              onClick={() => setIsDrawerOpen(true)}
+            >
+              Select Pair
+            </Button>
+
+            <div className="flex items-center gap-4">
+              <div
+                className={`px-3 py-2 rounded-lg ${
+                  currentTrend === "up"
+                    ? "bg-green-600"
+                    : currentTrend === "down"
+                    ? "bg-red-600"
+                    : "bg-gray-600"
+                }`}
+              >
                 <span className="text-white font-mono">
                   ${currentPrice.toFixed(2)}
                 </span>
               </div>
-              
-              {/* Time remaining */}
               <div className="bg-gray-700 px-3 py-2 rounded-lg">
                 <span className="text-white font-mono">
                   {getTimeRemaining()}s
                 </span>
               </div>
-
-              <button
-                onClick={toggleAnimation}
-                className="flex items-center bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg"
-              >
-                {isAnimating ? <FaPause className="mr-2" /> : <FaPlay className="mr-2" />}
-                {isAnimating ? 'Pause' : 'Play'}
-              </button>
-              
-              <button
-                onClick={resetAnimation}
-                className="flex items-center bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg"
-              >
-                <FaSync className="mr-2" />
-                Reset
-              </button>
-              
-              <button
-                onClick={() => setIsPairsModalOpen(true)}
-                className="flex items-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
-              >
-                <FaPlus className="mr-2" />
-                {selectedPair}
-              </button>
+              <Link href="/aiTrade" passHref>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  icon={<FaRobot className="w-4 h-4" />}
+                  className="rounded-full"
+                >
+                  Trade with AI
+                </Button>
+              </Link>
             </div>
           </div>
 
-          {/* Trading Chart */}
-          <TradingChart data={chartData} pairName={selectedPair} />
-
-          {/* Trading controls */}
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-gray-800 rounded-lg p-4">
-              <h3 className="text-lg font-medium text-white mb-4">Buy</h3>
-              <div className="space-y-3">
-                <input
-                  type="number"
-                  placeholder="Amount"
-                  className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white"
-                />
-                <button className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded">
-                  Buy
-                </button>
-              </div>
-            </div>
-            <div className="bg-gray-800 rounded-lg p-4">
-              <h3 className="text-lg font-medium text-white mb-4">Sell</h3>
-              <div className="space-y-3">
-                <input
-                  type="number"
-                  placeholder="Amount"
-                  className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white"
-                />
-                <button className="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded">
-                  Sell
-                </button>
-              </div>
-            </div>
+          <div className="flex-1">
+            <TradingChart
+              ref={chartRef}
+              data={chartData}
+              pairName={selectedPair}
+              currentPrice={currentPrice}
+            />
           </div>
         </div>
 
-        {/* Pairs Selection Modal */}
-        <Modal
-          isOpen={isPairsModalOpen}
-          onClose={() => setIsPairsModalOpen(false)}
-          title="Select Trading Pair"
+        {/* Left Drawer */}
+        <div
+          className={`fixed top-0 left-0 h-full w-80 bg-gray-800 shadow-xl transform transition-transform duration-300 z-50
+            ${isDrawerOpen ? "translate-x-0" : "-translate-x-full"}`}
         >
-          <UserPairsList onPairSelect={handlePairSelect} />
-        </Modal>
+          <div className="p-4 flex items-center justify-between border-b border-gray-700">
+            <h2 className="text-white font-semibold">Select trade pair</h2>
+            <button
+              className="text-gray-400 hover:text-white"
+              onClick={() => setIsDrawerOpen(false)}
+            >
+              ✕
+            </button>
+          </div>
+          <div className="p-4 overflow-y-auto h-full">
+            <UserPairsList
+              onPairSelect={handlePairSelect}
+              selectedPair={selectedPair}
+            />
+          </div>
+        </div>
+
+        {isDrawerOpen && (
+          <div
+            className="fixed inset-0 bg-black/40 z-40"
+            onClick={() => setIsDrawerOpen(false)}
+          />
+        )}
       </div>
     </PrivateLayout>
   );
