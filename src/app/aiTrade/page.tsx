@@ -28,37 +28,26 @@ export default function AiTrade() {
     const now = new Date();
     const hours = now.getHours();
     const minutes = now.getMinutes();
-    const isTime =
-      (hours >= 5 && hours < 17) || (hours === 17 && minutes === 0);
+    
+    // Active between 3:35 AM to 3:40 AM
+    const isTime = hours === 3 && minutes >= 35 && minutes <= 40;
     setIsActiveTime(isTime);
     setTimeStatus(
-      isTime ? "Trading window open" : "Come back tomorrow at 5:00 AM"
+      isTime ? "Trading window open" : "Come back tomorrow at 3:35 AM"
     );
   };
 
   useEffect(() => {
     checkTimeStatus();
-    timeCheckRef.current = setInterval(checkTimeStatus, 60_000);
+    // Check every 30 seconds
+    timeCheckRef.current = setInterval(checkTimeStatus, 30_000);
     return () => {
       if (timeCheckRef.current) clearInterval(timeCheckRef.current);
     };
   }, []);
 
-  /** 🔑 NEW: auto-deactivate when the window closes */
-  useEffect(() => {
-    if (!isActiveTime && isActivated) {
-      setIsActivated(false);
-      (async () => {
-        try {
-          await apiService.toggleAiStatus(); // no argument
-        } catch (err) {
-          console.error("Failed to auto-deactivate AI status:", err);
-        }
-      })();
-    }
-  }, [isActiveTime, isActivated]);
-
-  // --------------------------------------------------
+  // Remove client-side deactivation logic completely
+  // The cron job will handle deactivation at 3:45 AM server-side
 
   const handleToggleActivation = async () => {
     if (!isActiveTime || isLoading) return;
@@ -75,7 +64,18 @@ export default function AiTrade() {
   };
 
   const formatTime = (date: Date) =>
-    date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+
+  // Function to get current status message
+  const getStatusMessage = () => {
+    if (isLoading) return "Processing...";
+    
+    if (isActiveTime) {
+      return `Tap the toggle to ${isActivated ? "deactivate" : "activate"} AI trading`;
+    }
+    
+    return "Trading window is closed";
+  };
 
   return (
     <PrivateLayout>
@@ -87,7 +87,10 @@ export default function AiTrade() {
         {/* Time info */}
         <div className="mb-6 text-center">
           <p className="text-gray-400">
-            Active only between 5:00 AM and 5:00 PM
+            Active only between 3:35 AM and 3:40 AM
+          </p>
+          <p className="text-gray-400">
+            Auto-deactivation at 3:45 AM (server-side)
           </p>
           <p className="text-gray-400 mt-2">
             Current time: {formatTime(new Date())}
@@ -134,13 +137,7 @@ export default function AiTrade() {
         </button>
 
         <p className="text-gray-400 mt-4 text-sm text-center max-w-xs">
-          {isLoading
-            ? "Processing..."
-            : isActiveTime
-            ? `Tap the toggle to ${
-                isActivated ? "deactivate" : "activate"
-              } AI trading`
-            : "Trading window is closed"}
+          {getStatusMessage()}
         </p>
       </div>
     </PrivateLayout>
