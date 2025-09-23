@@ -29,11 +29,12 @@ export default function AiTrade() {
     const hours = now.getHours();
     const minutes = now.getMinutes();
     
-    // Active between 3:35 AM to 3:40 AM
-    const isTime = hours === 3 && minutes >= 35 && minutes <= 40;
+    // Active between 3:30 AM to 11:00 AM
+    const isTime = (hours > 3 || (hours === 3 && minutes >= 30)) && 
+                   (hours < 11 || (hours === 11 && minutes === 0));
     setIsActiveTime(isTime);
     setTimeStatus(
-      isTime ? "Trading window open" : "Come back tomorrow at 3:35 AM"
+      isTime ? "Trading window open" : "Come back tomorrow at 3:30 AM"
     );
   };
 
@@ -45,9 +46,6 @@ export default function AiTrade() {
       if (timeCheckRef.current) clearInterval(timeCheckRef.current);
     };
   }, []);
-
-  // Remove client-side deactivation logic completely
-  // The cron job will handle deactivation at 3:45 AM server-side
 
   const handleToggleActivation = async () => {
     if (!isActiveTime || isLoading) return;
@@ -87,10 +85,10 @@ export default function AiTrade() {
         {/* Time info */}
         <div className="mb-6 text-center">
           <p className="text-gray-400">
-            Active only between 3:35 AM and 3:40 AM
+            Active only between 3:30 AM and 11:00 AM
           </p>
           <p className="text-gray-400">
-            Auto-deactivation at 3:45 AM (server-side)
+            Auto-deactivation at 11:00 AM (server-side)
           </p>
           <p className="text-gray-400 mt-2">
             Current time: {formatTime(new Date())}
