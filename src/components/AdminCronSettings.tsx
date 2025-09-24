@@ -10,6 +10,11 @@ export default function AdminCronSettings() {
     time: "06:00",
     timeZone: "Asia/Dhaka"
   });
+  const [backendSettings, setBackendSettings] = useState({
+    balanceUpdateTime: "06:00",
+    deactivationTime: "06:01",
+    timeZone: "Asia/Dhaka"
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
@@ -34,6 +39,19 @@ export default function AdminCronSettings() {
       setIsLoading(true);
       const data = await cronSettingsApiService.getCronSettings();
       setSettings(data);
+      
+      // Also load the full backend response for display
+      const fullResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/cron-settings`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('adminAuthToken')}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (fullResponse.ok) {
+        const backendData = await fullResponse.json();
+        setBackendSettings(backendData);
+      }
     } catch (error: any) {
       console.error('Failed to load cron settings:', error);
       setMessage(error.message || 'Failed to load cron settings');
@@ -57,6 +75,9 @@ export default function AdminCronSettings() {
       
       const response = await cronSettingsApiService.updateCronSettings(settings);
       setMessage(response.message || 'Settings updated successfully');
+      
+      // Reload settings to get updated backend data
+      await loadSettings();
     } catch (error: any) {
       console.error('Error saving cron settings:', error);
       setMessage(error.message || 'Error saving settings');
@@ -109,7 +130,7 @@ export default function AdminCronSettings() {
       </div>
       
       {message && (
-        <div className={`p-3 mb-4 rounded ${message.includes('success') ? 'bg-green-500/10 text-green-500 border border-green-500' : 'bg-red-500/10 text-red-500 border border-red-500'}`}>
+        <div className={`p-3 mb-4 rounded ${message.includes('success') ? 'bg-green-500/10 text-green-500 border border-green-500' : 'bg-green-500/10 text-green-500 border border-green-500'}`}>
           {message}
         </div>
       )}
@@ -149,13 +170,6 @@ export default function AdminCronSettings() {
         </div>
         
         <div className="flex justify-end mt-6 space-x-2">
-          {/* <Button 
-            onClick={testCronJob} 
-            variant="secondary"
-            disabled={isTesting}
-          >
-            {isTesting ? 'Testing...' : 'Test Now'}
-          </Button> */}
           <Button type="submit" variant="primary" disabled={isSaving}>
             {isSaving ? 'Saving...' : 'Save Settings'}
           </Button>
@@ -164,8 +178,14 @@ export default function AdminCronSettings() {
       
       <div className="mt-6 p-4 bg-gray-700 rounded-lg">
         <h3 className="text-sm font-medium text-gray-300 mb-2">Current Schedule</h3>
+        <p className="text-white mb-1">
+          Balance Update: <strong>{backendSettings.balanceUpdateTime}</strong>
+        </p>
         <p className="text-white">
-          The cron job will run daily at <strong>{settings.time}</strong> ({settings.timeZone} time)
+          Auto Deactivation: <strong>{backendSettings.deactivationTime}</strong>
+        </p>
+        <p className="text-white mt-1">
+          Time Zone: <strong>{backendSettings.timeZone}</strong>
         </p>
       </div>
     </div>

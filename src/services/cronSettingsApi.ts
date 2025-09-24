@@ -11,6 +11,13 @@ export interface UpdateCronSettingsRequest {
   timeZone: string;
 }
 
+// NEW: Interface for backend response
+interface BackendCronSettings {
+  balanceUpdateTime: string;
+  deactivationTime: string;
+  timeZone: string;
+}
+
 class CronSettingsApiService {
   private isAdminEndpoint(endpoint: string): boolean {
     const adminEndpoints = [
@@ -65,14 +72,20 @@ class CronSettingsApiService {
     }
   }
 
-  // Get current cron settings
+  // Get current cron settings - UPDATED
   async getCronSettings(): Promise<CronSettings> {
-    return this.request<CronSettings>('/cron-settings', {
+    const backendResponse = await this.request<BackendCronSettings>('/cron-settings', {
       method: 'GET',
     });
+
+    // Transform backend response to frontend format
+    return {
+      time: backendResponse.balanceUpdateTime,
+      timeZone: backendResponse.timeZone
+    };
   }
 
-  // Update cron settings
+  // Update cron settings - UPDATED
   async updateCronSettings(settingsData: UpdateCronSettingsRequest): Promise<{ message: string }> {
     return this.request<{ message: string }>('/cron-settings', {
       method: 'PUT',
