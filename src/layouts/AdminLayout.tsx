@@ -152,19 +152,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <FaClock className="w-5 h-5" />
                 <span className="ml-3">Profit Loss Schedule</span>
               </Link>
-              
-              <Link 
-                href="/admin/settings" 
-                className={`flex items-center px-4 py-3 rounded-lg transition-colors duration-200 ${
-                  isActive('/admin/settings') 
-                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg' 
-                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                }`}
-                onClick={() => setSidebarOpen(false)}
-              >
-                <FaCog className="w-5 h-5" />
-                <span className="ml-3">Settings</span>
-              </Link>
             </nav>
 
             {/* Sign out button at bottom */}

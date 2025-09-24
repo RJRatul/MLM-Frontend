@@ -216,7 +216,7 @@ export default function DashboardLayout({
 
               {/* Right side items */}
               <div className="flex items-center space-x-4">
-                <Link href="/wallet" passHref>
+                <Link href="/deposit" passHref>
                     <UserBalance />
                 </Link>
 
