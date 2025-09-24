@@ -16,7 +16,8 @@ import {
   FaRobot,
   FaBars,
   FaTimes,
-  FaHandshake, // Added affiliate icon
+  FaHandshake,
+  FaExchangeAlt, // Added affiliate icon
 } from "react-icons/fa";
 import UserBalance from "@/components/UserBalance";
 
@@ -146,6 +147,17 @@ export default function DashboardLayout({
               >
                 <FaWallet className="w-5 h-5" />
                 <span className="ml-3">Deposit</span>
+              </Link>
+              <Link
+                href="/withdrawal"
+                className={`flex items-center px-4 py-3 rounded-lg transition-colors duration-200 ${
+                  isActive("/withdrawal")
+                    ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
+                    : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                }`}
+              >
+                <FaExchangeAlt className="w-5 h-5" />
+                <span className="ml-3">Withdrawal</span>
               </Link>
 
               <Link

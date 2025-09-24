@@ -75,6 +75,48 @@ export interface DepositsListResponse {
   total?: number;
 }
 
+// Withdrawal Interfaces
+export interface Withdrawal {
+  _id: string;
+  // userId: string;
+  amount: number;
+  method: string;
+  accountDetails: {
+    binanceId: string;
+  };
+  remarks?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  adminId?: string;
+  adminNote?: string;
+  createdAt: string;
+  updatedAt: string;
+  userId?: {
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+}
+
+export interface CreateWithdrawalRequest {
+  amount: number;
+  method: string;
+  binanceId: string;
+  remarks?: string;
+}
+
+export interface WithdrawalResponse {
+  message: string;
+  withdrawal: Withdrawal;
+  currentBalance?: number;
+}
+
+export interface WithdrawalsListResponse {
+  withdrawals: Withdrawal[];
+  totalPages?: number;
+  currentPage?: number;
+  total?: number;
+}
+
 class ApiService {
   private isAdminEndpoint(endpoint: string): boolean {
     // Use regex to properly match admin endpoints
@@ -83,6 +125,10 @@ class ApiService {
       /^\/deposits\/[a-f0-9]{24}\/approve$/, // /deposits/:id/approve (MongoDB ObjectId)
       /^\/deposits\/[a-f0-9]{24}\/reject$/, // /deposits/:id/reject (MongoDB ObjectId)
       /^\/deposits\?/, // /deposits?status=...
+      /^\/withdrawals\/pending$/, // /withdrawals/pending
+      /^\/withdrawals\/[a-f0-9]{24}\/approve$/, // /withdrawals/:id/approve
+      /^\/withdrawals\/[a-f0-9]{24}\/reject$/, // /withdrawals/:id/reject
+      /^\/withdrawals\?/, // /withdrawals?status=...
       /^\/users/, // any user management endpoints
       /^\/admin\// // any admin-specific endpoints
     ];
@@ -190,15 +236,6 @@ class ApiService {
     return this.request<Deposit[]>('/deposits/pending');
   }
 
-  async toggleAiStatus(): Promise<{
-    message: string;
-    aiStatus: boolean;
-  }> {
-    return this.request<{ message: string; aiStatus: boolean }>('/user/toggle-ai', {
-      method: 'PATCH',
-    });
-  }
-
   async getAllDeposits(filters?: {
     status?: string;
     page?: number;
@@ -223,6 +260,59 @@ class ApiService {
     return this.request<DepositResponse>(`/deposits/${depositId}/reject`, {
       method: 'PATCH',
       body: JSON.stringify({ adminNote }),
+    });
+  }
+
+  // Withdrawal methods - User endpoints
+  async createWithdrawal(withdrawalData: CreateWithdrawalRequest): Promise<WithdrawalResponse> {
+    return this.request<WithdrawalResponse>('/withdrawals', {
+      method: 'POST',
+      body: JSON.stringify(withdrawalData),
+    });
+  }
+
+  async getUserWithdrawals(): Promise<Withdrawal[]> {
+    return this.request<Withdrawal[]>('/withdrawals/my-withdrawals');
+  }
+
+  // Withdrawal methods - Admin endpoints (will use admin token)
+  async getPendingWithdrawals(): Promise<Withdrawal[]> {
+    return this.request<Withdrawal[]>('/withdrawals/pending');
+  }
+
+  async getAllWithdrawals(filters?: {
+    status?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<WithdrawalsListResponse> {
+    const params = new URLSearchParams();
+    if (filters?.status) params.append('status', filters.status);
+    if (filters?.page) params.append('page', filters.page.toString());
+    if (filters?.limit) params.append('limit', filters.limit.toString());
+
+    return this.request<WithdrawalsListResponse>(`/withdrawals?${params.toString()}`);
+  }
+
+  async approveWithdrawal(withdrawalId: string, adminNote?: string): Promise<WithdrawalResponse> {
+    return this.request<WithdrawalResponse>(`/withdrawals/${withdrawalId}/approve`, {
+      method: 'PATCH',
+      body: JSON.stringify({ adminNote }),
+    });
+  }
+
+  async rejectWithdrawal(withdrawalId: string, adminNote?: string): Promise<WithdrawalResponse> {
+    return this.request<WithdrawalResponse>(`/withdrawals/${withdrawalId}/reject`, {
+      method: 'PATCH',
+      body: JSON.stringify({ adminNote }),
+    });
+  }
+
+  async toggleAiStatus(): Promise<{
+    message: string;
+    aiStatus: boolean;
+  }> {
+    return this.request<{ message: string; aiStatus: boolean }>('/user/toggle-ai', {
+      method: 'PATCH',
     });
   }
 
