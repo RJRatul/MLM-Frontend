@@ -109,18 +109,21 @@ export default function DashboardLayout({
                 <span className="ml-3">Trade</span>
               </Link>
 
+              
+
               <Link
-                href="/account"
+                href="/aiTrade"
                 className={`flex items-center px-4 py-3 rounded-lg transition-colors duration-200 ${
-                  isActive("/account")
+                  isActive("/aiTrade")
                     ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
                     : "text-gray-300 hover:bg-gray-700 hover:text-white"
                 }`}
               >
-                <FaUser className="w-5 h-5" />
-                <span className="ml-3">Account</span>
+                <FaRobot className="w-5 h-5" />
+                <span className="ml-3">AI Trade Activation</span>
               </Link>
 
+              {/* New Affiliate Menu Item */}
               <Link
                 href="/referral"
                 className={`flex items-center px-4 py-3 rounded-lg transition-colors duration-200 ${
@@ -133,29 +136,28 @@ export default function DashboardLayout({
                 <span className="ml-3">Referral Bonus</span>
               </Link>
 
-              {/* New Affiliate Menu Item */}
               <Link
-                href="/affiliate"
+                href="/deposit"
                 className={`flex items-center px-4 py-3 rounded-lg transition-colors duration-200 ${
-                  isActive("/affiliate")
-                    ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
-                    : "text-gray-300 hover:bg-gray-700 hover:text-white"
-                }`}
-              >
-                <FaHandshake className="w-5 h-5" />
-                <span className="ml-3">Affiliate</span>
-              </Link>
-
-              <Link
-                href="/wallet"
-                className={`flex items-center px-4 py-3 rounded-lg transition-colors duration-200 ${
-                  isActive("/wallet")
+                  isActive("/deposit")
                     ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
                     : "text-gray-300 hover:bg-gray-700 hover:text-white"
                 }`}
               >
                 <FaWallet className="w-5 h-5" />
-                <span className="ml-3">Wallet</span>
+                <span className="ml-3">Deposit</span>
+              </Link>
+
+              <Link
+                href="/account"
+                className={`flex items-center px-4 py-3 rounded-lg transition-colors duration-200 ${
+                  isActive("/account")
+                    ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
+                    : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                }`}
+              >
+                <FaUser className="w-5 h-5" />
+                <span className="ml-3">Account</span>
               </Link>
             </nav>
 

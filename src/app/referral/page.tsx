@@ -225,7 +225,7 @@ const getProgressData = (user: User | null): ProgressData => {
       <div className="space-y-6">
         {/* Header with Refresh Button */}
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-white">Affiliate Program</h1>
+          <h1 className="text-2xl font-bold text-white">Refferal Bonus</h1>
           <button
             onClick={loadFreshData}
             disabled={isRefreshing}

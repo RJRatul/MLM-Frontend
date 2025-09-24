@@ -157,7 +157,7 @@ export default function Trade() {
 
   return (
     <PrivateLayout>
-      <div className="min-h-screen bg-gray-900 p-4 relative">
+      <div className="min-h-screen bg-gray-900 relative">
         <div className="flex flex-col gap-6">
           <div className="flex items-center justify-between">
             <Button
@@ -171,7 +171,7 @@ export default function Trade() {
             </Button>
 
             <div className="flex items-center gap-4">
-              <div
+              {/* <div
                 className={`px-3 py-2 rounded-lg ${
                   currentTrend === "up"
                     ? "bg-green-600"
@@ -188,7 +188,7 @@ export default function Trade() {
                 <span className="text-white font-mono">
                   {getTimeRemaining()}s
                 </span>
-              </div>
+              </div> */}
               <Link href="/aiTrade" passHref>
                 <Button
                   variant="primary"

@@ -32,9 +32,8 @@ const TradingChart = forwardRef<ChartHandle, TradingChartProps>(
     const containerRef = useRef<HTMLDivElement | null>(null);
     const chartRef = useRef<IChartApi | null>(null);
     const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
-
-    const userInteracted = useRef(false);
     const initialRangeSet = useRef(false);
+    const userInteracted = useRef(false);
 
     useImperativeHandle(ref, () => ({
       updateCurrentCandle: (candle: any) => {
@@ -57,6 +56,7 @@ const TradingChart = forwardRef<ChartHandle, TradingChartProps>(
         close: d.close,
       }));
 
+    // Initialize chart
     useEffect(() => {
       if (!containerRef.current) return;
 
@@ -75,9 +75,9 @@ const TradingChart = forwardRef<ChartHandle, TradingChartProps>(
           timeVisible: true,
           secondsVisible: false,
           borderColor: "#374151",
-          barSpacing: 8,
-          minBarSpacing: 3,
-          rightOffset: 1,
+          barSpacing: 20, // Increased for bigger candles
+          rightOffset: 8, // Space for future candles
+          minBarSpacing: 10, // Minimum zoom level for bigger candles
         },
         crosshair: { mode: 1 },
         rightPriceScale: {
@@ -120,36 +120,41 @@ const TradingChart = forwardRef<ChartHandle, TradingChartProps>(
       };
     }, []);
 
+    // Reset user interaction on pair change
     useEffect(() => {
       userInteracted.current = false;
       initialRangeSet.current = false;
     }, [pairName]);
 
+    // Update chart data
     useEffect(() => {
       if (!seriesRef.current || !chartRef.current) return;
 
       const formatted = formatData(data);
       seriesRef.current.setData(formatted);
 
-      if (!userInteracted.current && !initialRangeSet.current) {
-        const visibleCount = 20;
-        const to = formatted.length - 1;
-        const from = Math.max(0, to - visibleCount + 1);
-
-        // Safety check: ensure from is not greater than to
-        if (from <= to) {
-          chartRef.current.timeScale().setVisibleLogicalRange({ from, to });
-
-          // Adjust chart options to fill left side
-          chartRef.current.applyOptions({
-            timeScale: {
-              rightOffset: 0, // no extra padding on right
-              barSpacing: 12, // tweak for zoom-in effect
-            },
-          });
-
-          initialRangeSet.current = true;
-        }
+      if (!userInteracted.current && formatted.length > 0) {
+        const targetVisibleCandles = 30; // Show exactly 30 candles
+        
+        // Always show the last 30 candles, regardless of total data length
+        const lastIndex = formatted.length - 1;
+        const from = Math.max(0, lastIndex - targetVisibleCandles + 1);
+        const to = lastIndex;
+        
+        chartRef.current.timeScale().setVisibleLogicalRange({ 
+          from, 
+          to 
+        });
+        
+        // Apply settings for bigger candles
+        chartRef.current.applyOptions({
+          timeScale: {
+            rightOffset: 6,
+            barSpacing: 20, // Bigger bar spacing for larger candles
+          },
+        });
+        
+        initialRangeSet.current = true;
       }
     }, [data]);
 
@@ -162,17 +167,6 @@ const TradingChart = forwardRef<ChartHandle, TradingChartProps>(
           </span>
         </div>
         <div ref={containerRef} className="rounded-lg overflow-hidden" />
-        <div className="flex justify-between mt-4 text-sm">
-          <div className="text-green-400">
-            High: ${Math.max(...data.map((d) => d.high)).toFixed(2)}
-          </div>
-          <div className="text-red-400">
-            Low: ${Math.min(...data.map((d) => d.low)).toFixed(2)}
-          </div>
-          <div className="text-gray-300">
-            Current: ${data[data.length - 1]?.close.toFixed(2)}
-          </div>
-        </div>
       </div>
     );
   }

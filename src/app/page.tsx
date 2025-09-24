@@ -70,7 +70,7 @@ export default function Home() {
           </div>
 
           {/* Additional content to demonstrate flex/grow layout */}
-          <div className="w-full max-w-5xl mt-8">
+          <div className="w-full max-w-5xl mt-8" id="how-it-works">
             <div className="bg-gray-900/80 backdrop-blur-sm rounded-2xl border border-blue-500/30 p-6 sm:p-8">
               <h2 className="text-2xl sm:text-3xl font-bold text-white mb-6 text-center">How Our AI Trading Works</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

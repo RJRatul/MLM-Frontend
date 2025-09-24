@@ -17,9 +17,8 @@ export default function WalletPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <FaWallet className="mr-3 text-blue-400 text-2xl" />
             <h1 className="text-2xl font-bold text-white">
-              Wallet Management
+              Deposit Management
             </h1>
           </div>
           <UserBalance />

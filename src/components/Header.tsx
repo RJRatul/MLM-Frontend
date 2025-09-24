@@ -4,48 +4,54 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import Button from '@/components/Button';
-import { FaTimes, FaBars, FaCoins } from 'react-icons/fa';
+import { FaTimes, FaBars } from 'react-icons/fa';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const { user, logout } = useAuth();
 
-  // Handle scroll effect for header
+  const getUserInitials = () =>
+    user?.firstName && user?.lastName
+      ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
+      : (user?.firstName?.[0] ?? user?.lastName?.[0] ?? 'U').toUpperCase();
+
+  const getUserName = () =>
+    user?.firstName && user?.lastName
+      ? `${user.firstName} ${user.lastName}`
+      : user?.firstName ?? user?.lastName ?? 'User';
+
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
-    };
+    const handleScroll = () => setIsScrolled(window.scrollY > 10);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Close menu when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setIsMenuOpen(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Close menu when a link is clicked
-  const handleLinkClick = () => {
-    setIsMenuOpen(false);
-  };
+  const handleLinkClick = () => setIsMenuOpen(false);
 
   return (
-    <header className={`relative w-full top-0 z-50 transition-all duration-300 ${
-      isScrolled 
-        ? 'bg-gray-900/95 backdrop-blur-md border-b border-blue-700/30 py-2' 
-        : 'bg-gray-900/90 backdrop-blur-sm border-b border-blue-800/30 py-3'
-    }`}>
+    <header
+      className={`relative w-full top-0 z-50 transition-all duration-300 ${
+        isScrolled
+          ? 'bg-gray-900/95 backdrop-blur-md border-b border-blue-700/30 py-2'
+          : 'bg-gray-900/90 backdrop-blur-sm border-b border-blue-800/30 py-3'
+      }`}
+    >
       <nav className="container mx-auto px-4">
         <div className="flex justify-between items-center">
-          {/* Logo - Fixed alignment */}
+          {/* Logo */}
           <Link href="/" className="flex items-center z-50">
             <div className="w-20 h-10 relative mr-2 flex-shrink-0">
               <Image
@@ -63,34 +69,50 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex space-x-1 xl:space-x-2">
-            <Link href="/" className="text-gray-300 hover:text-blue-400 transition-colors px-3 py-2 text-sm xl:text-base">
-              Home
+            <Link href="/#how-it-works" className="text-gray-300 hover:text-blue-400 px-3 py-2 text-sm xl:text-base">
+              About Us
             </Link>
-            <Link href="/about" className="text-gray-300 hover:text-purple-400 transition-colors px-3 py-2 text-sm xl:text-base">
-              About
-            </Link>
-            <Link href="/features" className="text-gray-300 hover:text-cyan-400 transition-colors px-3 py-2 text-sm xl:text-base">
-              Features
-            </Link>
-            <Link href="/pricing" className="text-gray-300 hover:text-blue-400 transition-colors px-3 py-2 text-sm xl:text-base">
-              Pricing
-            </Link>
-            <div className="flex items-center space-x-1 xl:space-x-2 ml-2">
-              <Link href="/login" className="text-gray-300 hover:text-purple-400 transition-colors px-3 py-2 text-sm xl:text-base">
-                Login
+
+            {/* ✅ Trade link visible only when logged in */}
+            {user && (
+              <Link href="/trade" className="text-gray-300 hover:text-green-400 px-3 py-2 text-sm xl:text-base">
+                Trade
               </Link>
-              <Button
-                href="/register"
-                variant="primary"
-                size="sm"
-                className="px-3 xl:px-4"
-              >
-                Register
-              </Button>
+            )}
+
+            <div className="flex items-center space-x-1 xl:space-x-2 ml-2">
+              {user ? (
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
+                    {getUserInitials()}
+                  </div>
+                  <span className="text-sm font-medium text-white">{getUserName()}</span>
+                  <Button onClick={logout} variant="secondary" size="sm" className="px-3">
+                    Sign Out
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    className="text-gray-300 hover:text-purple-400 transition-colors px-3 py-2 text-sm xl:text-base"
+                  >
+                    Login
+                  </Link>
+                  <Button
+                    href="/register"
+                    variant="primary"
+                    size="sm"
+                    className="px-3 xl:px-4"
+                  >
+                    Register
+                  </Button>
+                </>
+              )}
             </div>
           </div>
 
-          {/* Mobile menu button */}
+          {/* Mobile menu toggle */}
           <div className="lg:hidden">
             <Button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -104,8 +126,8 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Mobile menu dropdown - appears below header */}
-        <div 
+        {/* Mobile Menu */}
+        <div
           ref={menuRef}
           className={`lg:hidden absolute left-0 right-0 bg-gray-900/95 backdrop-blur-md border-b border-blue-700/30 transition-all duration-300 overflow-hidden ${
             isMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
@@ -113,51 +135,53 @@ export default function Header() {
         >
           <div className="container mx-auto px-4 py-4">
             <div className="flex flex-col space-y-4">
-              <Link 
-                href="/" 
-                className="text-gray-300 hover:text-blue-400 transition-colors py-2"
-                onClick={handleLinkClick}
-              >
-                Home
+              <Link href="/#how-it-works" onClick={handleLinkClick} className="text-gray-300 hover:text-blue-400 py-2">
+                About Us
               </Link>
-              <Link 
-                href="/about" 
-                className="text-gray-300 hover:text-purple-400 transition-colors py-2"
-                onClick={handleLinkClick}
-              >
-                About
-              </Link>
-              <Link 
-                href="/features" 
-                className="text-gray-300 hover:text-cyan-400 transition-colors py-2"
-                onClick={handleLinkClick}
-              >
-                Features
-              </Link>
-              <Link 
-                href="/pricing" 
-                className="text-gray-300 hover:text-blue-400 transition-colors py-2"
-                onClick={handleLinkClick}
-              >
-                Pricing
-              </Link>
-              <div className="pt-2 border-t border-blue-700/30 flex flex-col space-y-3">
-                <Link 
-                  href="/login" 
-                  className="text-gray-300 hover:text-purple-400 transition-colors py-2"
-                  onClick={handleLinkClick}
-                >
-                  Login
+
+              {user && (
+                <Link href="/trade" onClick={handleLinkClick} className="text-gray-300 hover:text-green-400 py-2">
+                  Trade
                 </Link>
-                <Button
-                  href="/register"
-                  variant="primary"
-                  size="sm"
-                  className="w-full justify-center"
-                  onClick={handleLinkClick}
-                >
-                  Register
-                </Button>
+              )}
+
+              <div className="pt-2 border-t border-blue-700/30 flex flex-col space-y-3">
+                {user ? (
+                  <>
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
+                        {getUserInitials()}
+                      </div>
+                      <span className="text-sm font-medium text-white">{getUserName()}</span>
+                    </div>
+                    <Button
+                      onClick={() => {
+                        logout();
+                        handleLinkClick();
+                      }}
+                      variant="secondary"
+                      size="sm"
+                      className="w-full justify-center"
+                    >
+                      Sign Out
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/login" onClick={handleLinkClick} className="text-gray-300 hover:text-purple-400 py-2">
+                      Login
+                    </Link>
+                    <Button
+                      href="/register"
+                      variant="primary"
+                      size="sm"
+                      className="w-full justify-center"
+                      onClick={handleLinkClick}
+                    >
+                      Register
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </div>
