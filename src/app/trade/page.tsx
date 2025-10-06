@@ -158,7 +158,7 @@ export default function Trade() {
 
   return (
     <PrivateLayout>
-      <div className="min-h-[80vh] bg-gray-900 relative p-3">
+      <div className="min-h-[100vh] bg-gray-900 relative p-3">
         <div className="flex flex-col gap-6">
           <div className="flex items-center justify-between">
             <Button
@@ -172,6 +172,9 @@ export default function Trade() {
             </Button>
 
             <div className="flex items-center gap-4">
+              <Button variant="primary" size="sm" className="rounded-full">
+                <FaRobot className="w-4 h-4" />
+              </Button>
               <SmallAiToggle />
             </div>
           </div>

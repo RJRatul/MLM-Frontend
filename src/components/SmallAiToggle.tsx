@@ -11,6 +11,14 @@ export default function SmallAiToggle() {
   const timeCheckRef = useRef<NodeJS.Timeout | null>(null);
   const [showTooltip, setShowTooltip] = useState(false);
 
+  // Toast state
+  const [toast, setToast] = useState<{
+    message: string;
+    color: "green" | "red";
+    show: boolean;
+  }>({ message: "", color: "green", show: false });
+  const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   // Check if current time is between 3:30 AM and 11:00 AM
   const checkTimeStatus = () => {
     const now = new Date();
@@ -47,22 +55,33 @@ export default function SmallAiToggle() {
     try {
       const response = await apiService.toggleAiStatus();
       setIsActivated(response.aiStatus);
+
+      // Show toast
+      showAiToast(response.aiStatus);
     } catch (err) {
       console.error("Failed to toggle AI:", err);
       setIsActivated((prev) => !prev);
+      showAiToast(!isActivated);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const showAiToast = (status: boolean) => {
+    setToast({
+      message: `AI Trade is ${status ? "ON" : "OFF"}`,
+      color: status ? "green" : "red",
+      show: true,
+    });
+
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    toastTimeoutRef.current = setTimeout(() => {
+      setToast((prev) => ({ ...prev, show: false }));
+    }, 3000);
+  };
+
   return (
-    <div
-      className="relative flex items-center justify-center"
-      onMouseEnter={() => {
-        if (!isActiveTime || isLoading) setShowTooltip(true);
-      }}
-      onMouseLeave={() => setShowTooltip(false)}
-    >
+    <div className="relative flex items-center justify-center">
       <button
         onClick={handleToggle}
         disabled={!isActiveTime || isLoading}
@@ -84,19 +103,26 @@ export default function SmallAiToggle() {
         />
       </button>
 
-      {/* Tooltip (bottom-left) */}
-      {/* Tooltip (bottom-left) */}
-{showTooltip && (
-  <div className="absolute -bottom-8 left-[-224px] bg-gray-600 text-white text-xs rounded-md px-3 py-1 shadow-md whitespace-nowrap z-20">
-    {isLoading
-      ? "Processing..."
-      : "AI trading available from 3:30 AM to 11:00 AM"}
-    
-    {/* Arrow */}
-    {/* <div className="absolute top-0 left-2 w-2 h-2 bg-gray-600 rotate-45 translate-y-[-50%]" /> */}
-  </div>
-)}
+      {/* Tooltip */}
+      {showTooltip && (
+        <div className="absolute -bottom-8 left-0 bg-gray-600 text-white text-xs rounded-md px-3 py-1 shadow-md whitespace-nowrap z-20">
+          {isLoading
+            ? "Processing..."
+            : "AI trading available from 3:30 AM to 11:00 AM"}
+        </div>
+      )}
 
+      {/* Toast */}
+      {toast.show && (
+        <div
+          className={`fixed top-5 left-1/2 transform -translate-x-1/2 flex items-center gap-2 px-4 py-2 rounded shadow-md text-white z-50 ${
+            toast.color === "green" ? "bg-green-500" : "bg-red-500"
+          }`}
+        >
+          <FaRobot className="w-4 h-4" />
+          <span className="font-medium">{toast.message}</span>
+        </div>
+      )}
     </div>
   );
 }
