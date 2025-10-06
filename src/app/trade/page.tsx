@@ -11,6 +11,7 @@ import Link from "next/link";
 import Button from "@/components/Button";
 import { FaPlus, FaRobot } from "react-icons/fa";
 import UserPairsList from "@/components/UserPairsList";
+import SmallAiToggle from "@/components/SmallAiToggle";
 
 export default function Trade() {
   const { user } = useAuth();
@@ -171,16 +172,7 @@ export default function Trade() {
             </Button>
 
             <div className="flex items-center gap-4">
-              <Link href="/aiTrade" passHref>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  icon={<FaRobot className="w-4 h-4" />}
-                  className="rounded-full"
-                >
-                  Trade with AI
-                </Button>
-              </Link>
+              <SmallAiToggle />
             </div>
           </div>
 

@@ -74,7 +74,7 @@ export default function DashboardLayout({
 
         {/* Sidebar */}
         <aside
-          className={`fixed inset-y-0 left-0 z-50 w-64 bg-gray-800 transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 ${
+          className={`fixed inset-y-0 left-0 z-50 w-20 bg-gray-800 transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 ${
             sidebarOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
@@ -82,12 +82,12 @@ export default function DashboardLayout({
             {/* Logo */}
             <div className="flex items-center justify-start h-16 px-4 bg-gray-900 border-b border-gray-700">
               <div className="flex items-center">
-                <div className="w-20 h-10 relative">
+                <div className="w-20 h-10 relative left-[-17px]">
                   <Image
                     src="/logo.png"
                     alt="BeeCoin Logo"
                     fill
-                    className="object-contain"
+                    className="object-contain "
                   />
                 </div>
                 <span className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
@@ -107,7 +107,7 @@ export default function DashboardLayout({
                 }`}
               >
                 <FaChartLine className="w-5 h-5" />
-                <span className="ml-3">Trade</span>
+                {/* <span className="ml-3">Trade</span> */}
               </Link>
 
               
@@ -121,7 +121,7 @@ export default function DashboardLayout({
                 }`}
               >
                 <FaRobot className="w-5 h-5" />
-                <span className="ml-3">AI Trade Activation</span>
+                {/* <span className="ml-3">AI Trade Activation</span> */}
               </Link>
 
               {/* New Affiliate Menu Item */}
@@ -134,7 +134,7 @@ export default function DashboardLayout({
                 }`}
               >
                 <FaGift className="w-5 h-5" />
-                <span className="ml-3">Referral Bonus</span>
+                {/* <span className="ml-3">Referral Bonus</span> */}
               </Link>
 
               <Link
@@ -146,7 +146,7 @@ export default function DashboardLayout({
                 }`}
               >
                 <FaWallet className="w-5 h-5" />
-                <span className="ml-3">Deposit</span>
+                {/* <span className="ml-3">Deposit</span> */}
               </Link>
               <Link
                 href="/withdrawal"
@@ -157,7 +157,7 @@ export default function DashboardLayout({
                 }`}
               >
                 <FaExchangeAlt className="w-5 h-5" />
-                <span className="ml-3">Withdrawal</span>
+                {/* <span className="ml-3">Withdrawal</span> */}
               </Link>
 
               <Link
@@ -169,7 +169,7 @@ export default function DashboardLayout({
                 }`}
               >
                 <FaUser className="w-5 h-5" />
-                <span className="ml-3">Account</span>
+                {/* <span className="ml-3">Account</span> */}
               </Link>
             </nav>
 
@@ -179,9 +179,9 @@ export default function DashboardLayout({
                 onClick={logout}
                 variant="secondary"
                 className="w-full justify-start text-red-400 hover:text-red-300"
-                icon={<FaSignOutAlt className="w-5 h-5" />}
+                // icon={<FaSignOutAlt className="w-5 h-5" />}
               >
-                Sign Out
+                <FaSignOutAlt className="w-5 h-5" />
               </Button>
             </div>
           </div>
