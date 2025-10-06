@@ -16,55 +16,51 @@ import {
   FaRobot,
   FaBars,
   FaTimes,
-  FaHandshake,
-  FaExchangeAlt, // Added affiliate icon
+  FaExchangeAlt,
 } from "react-icons/fa";
 import UserBalance from "@/components/UserBalance";
+import { createPortal } from "react-dom";
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, logout } = useAuth();
   const pathname = usePathname();
 
-  // Get user initials from firstName and lastName
+  // Tooltip state
+  const [tooltip, setTooltip] = useState<{ text: string; x: number; y: number } | null>(null);
+
+  // Navigation items
+  const navItems = [
+    { href: "/trade", icon: <FaChartLine className="w-5 h-5" />, label: "Trade" },
+    { href: "/aiTrade", icon: <FaRobot className="w-5 h-5" />, label: "AI Trade" },
+    { href: "/referral", icon: <FaGift className="w-5 h-5" />, label: "Referral" },
+    { href: "/deposit", icon: <FaWallet className="w-5 h-5" />, label: "Deposit" },
+    { href: "/withdrawal", icon: <FaExchangeAlt className="w-5 h-5" />, label: "Withdrawal" },
+    { href: "/account", icon: <FaUser className="w-5 h-5" />, label: "Account" },
+  ];
+
+  // Get user initials
   const getUserInitials = () => {
-    if (user?.firstName && user?.lastName) {
-      return `${user.firstName.charAt(0)}${user.lastName.charAt(
-        0
-      )}`.toUpperCase();
-    } else if (user?.firstName) {
-      return user.firstName.charAt(0).toUpperCase();
-    } else if (user?.lastName) {
-      return user.lastName.charAt(0).toUpperCase();
-    }
+    if (user?.firstName && user?.lastName) return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
+    if (user?.firstName) return user.firstName[0].toUpperCase();
+    if (user?.lastName) return user.lastName[0].toUpperCase();
     return "U";
   };
 
-  // Get full name for display
+  // Get full name
   const getUserName = () => {
-    if (user?.firstName && user?.lastName) {
-      return `${user.firstName} ${user.lastName}`;
-    } else if (user?.firstName) {
-      return user.firstName;
-    } else if (user?.lastName) {
-      return user.lastName;
-    }
+    if (user?.firstName && user?.lastName) return `${user.firstName} ${user.lastName}`;
+    if (user?.firstName) return user.firstName;
+    if (user?.lastName) return user.lastName;
     return "User";
   };
 
-  // Check if a navigation item is active
-  const isActive = (path: string) => {
-    return pathname === path || pathname.startsWith(path + "/");
-  };
+  const isActive = (path: string) => pathname === path || pathname.startsWith(path + "/");
 
   return (
     <AuthGuard>
       <div className="flex h-screen bg-gray-900 text-gray-100">
-        {/* Mobile sidebar backdrop */}
+        {/* Mobile backdrop */}
         {sidebarOpen && (
           <div
             className="fixed inset-0 bg-gray-900 bg-opacity-80 z-40 lg:hidden"
@@ -79,107 +75,72 @@ export default function DashboardLayout({
           }`}
         >
           <div className="flex flex-col h-full">
-            {/* Logo */}
-            <div className="flex items-center justify-start h-16 px-4 bg-gray-900 border-b border-gray-700">
-              <div className="flex items-center">
-                <div className="w-20 h-10 relative left-[-17px]">
-                  <Image
-                    src="/logo.png"
-                    alt="BeeCoin Logo"
-                    fill
-                    className="object-contain "
+            {/* Logo - Fixed to prevent text overlap */}
+            <div className="flex items-center justify-center h-16 px-2 bg-gray-900 border-b border-gray-700">
+              <div className="flex flex-col items-center space-y-1">
+                <div className="w-12 h-8 relative">
+                  <Image 
+                    src="/logo.png" 
+                    alt="BeeCoin Logo" 
+                    fill 
+                    className="object-contain" 
+                    priority
                   />
                 </div>
-                <span className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+                <span className="text-xs font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent text-center leading-tight">
                   BeeCoin
                 </span>
               </div>
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-              <Link
-                href="/trade"
-                className={`flex items-center px-4 py-3 rounded-lg transition-colors duration-200 ${
-                  isActive("/trade")
-                    ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
-                    : "text-gray-300 hover:bg-gray-700 hover:text-white"
-                }`}
-              >
-                <FaChartLine className="w-5 h-5" />
-                {/* <span className="ml-3">Trade</span> */}
-              </Link>
-
-              
-
-              <Link
-                href="/aiTrade"
-                className={`flex items-center px-4 py-3 rounded-lg transition-colors duration-200 ${
-                  isActive("/aiTrade")
-                    ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
-                    : "text-gray-300 hover:bg-gray-700 hover:text-white"
-                }`}
-              >
-                <FaRobot className="w-5 h-5" />
-                {/* <span className="ml-3">AI Trade Activation</span> */}
-              </Link>
-
-              {/* New Affiliate Menu Item */}
-              <Link
-                href="/referral"
-                className={`flex items-center px-4 py-3 rounded-lg transition-colors duration-200 ${
-                  isActive("/referral")
-                    ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
-                    : "text-gray-300 hover:bg-gray-700 hover:text-white"
-                }`}
-              >
-                <FaGift className="w-5 h-5" />
-                {/* <span className="ml-3">Referral Bonus</span> */}
-              </Link>
-
-              <Link
-                href="/deposit"
-                className={`flex items-center px-4 py-3 rounded-lg transition-colors duration-200 ${
-                  isActive("/deposit")
-                    ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
-                    : "text-gray-300 hover:bg-gray-700 hover:text-white"
-                }`}
-              >
-                <FaWallet className="w-5 h-5" />
-                {/* <span className="ml-3">Deposit</span> */}
-              </Link>
-              <Link
-                href="/withdrawal"
-                className={`flex items-center px-4 py-3 rounded-lg transition-colors duration-200 ${
-                  isActive("/withdrawal")
-                    ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
-                    : "text-gray-300 hover:bg-gray-700 hover:text-white"
-                }`}
-              >
-                <FaExchangeAlt className="w-5 h-5" />
-                {/* <span className="ml-3">Withdrawal</span> */}
-              </Link>
-
-              <Link
-                href="/account"
-                className={`flex items-center px-4 py-3 rounded-lg transition-colors duration-200 ${
-                  isActive("/account")
-                    ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
-                    : "text-gray-300 hover:bg-gray-700 hover:text-white"
-                }`}
-              >
-                <FaUser className="w-5 h-5" />
-                {/* <span className="ml-3">Account</span> */}
-              </Link>
+            <nav className="flex-1 px-3 py-6 space-y-2 overflow-y-auto">
+              {navItems.map((item) => (
+                <div
+                  key={item.href}
+                  className="relative flex items-center justify-center"
+                  onMouseEnter={(e) => {
+                    if (window.innerWidth >= 1024) {
+                      const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+                      setTooltip({ text: item.label, x: rect.right + 8, y: rect.top + rect.height / 2 });
+                    }
+                  }}
+                  onMouseLeave={() => {
+                    if (window.innerWidth >= 1024) setTooltip(null);
+                  }}
+                  onClick={(e) => {
+                    if (window.innerWidth < 1024) {
+                      e.stopPropagation();
+                      const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+                      setTooltip({ text: item.label, x: rect.right + 8, y: rect.top + rect.height / 2 });
+                      setTimeout(() => setTooltip(null), 1500);
+                    }
+                  }}
+                >
+                  <Link
+                    href={item.href}
+                    onClick={() => setSidebarOpen(false)} // Close sidebar on mobile when link is clicked
+                    className={`flex items-center justify-center w-12 h-12 rounded-lg transition-colors duration-200 ${
+                      isActive(item.href)
+                        ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
+                        : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                    }`}
+                  >
+                    {item.icon}
+                  </Link>
+                </div>
+              ))}
             </nav>
 
-            {/* Sign out button at bottom */}
-            <div className="p-4 border-t border-gray-700">
+            {/* Sign out */}
+            <div className="p-3 border-t border-gray-700">
               <Button
-                onClick={logout}
+                onClick={() => {
+                  logout();
+                  setSidebarOpen(false);
+                }}
                 variant="secondary"
-                className="w-full justify-start text-red-400 hover:text-red-300"
-                // icon={<FaSignOutAlt className="w-5 h-5" />}
+                className="w-full justify-center text-red-400 hover:text-red-300 hover:bg-gray-700 rounded-lg py-3"
               >
                 <FaSignOutAlt className="w-5 h-5" />
               </Button>
@@ -188,67 +149,52 @@ export default function DashboardLayout({
         </aside>
 
         {/* Main content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Top header */}
+        <div className="flex-1 flex flex-col overflow-hidden min-w-0"> {/* Added min-w-0 to prevent overflow issues */}
+          {/* Header */}
           <header className="bg-gray-800 border-b border-gray-700">
             <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
-              {/* Mobile menu button */}
+              {/* Mobile menu button - Fixed to properly toggle sidebar */}
               <div className="lg:hidden">
-                <Button
+                <button
                   onClick={() => setSidebarOpen(!sidebarOpen)}
-                  variant="secondary"
-                  size="sm"
-                  icon={
-                    sidebarOpen ? (
-                      <FaTimes className="w-4 h-4" />
-                    ) : (
-                      <FaBars className="w-4 h-4" />
-                    )
-                  }
+                  className="p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
                   aria-label="Toggle menu"
                 >
-                  {sidebarOpen ? "Close" : "Menu"}
-                </Button>
+                  {sidebarOpen ? (
+                    <FaTimes className="w-5 h-5" />
+                  ) : (
+                    <FaBars className="w-5 h-5" />
+                  )}
+                </button>
               </div>
 
-              {/* Empty div to push items to the right on desktop */}
               <div className="hidden lg:block flex-1"></div>
 
-              {/* Right side items */}
+              {/* Right side */}
               <div className="flex items-center space-x-4">
                 <Link href="/deposit" passHref>
-                    <UserBalance />
+                  <UserBalance />
                 </Link>
 
-                {/* AI Button */}
                 <Link href="/aiTrade" passHref>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    icon={<FaRobot className="w-4 h-4" />}
-                    className="rounded-full"
-                  >
+                  <Button variant="primary" size="sm" icon={<FaRobot className="w-4 h-4" />} className="rounded-full">
                     AI
                   </Button>
                 </Link>
-                {/* User info with hover effect */}
+
                 <div className="flex items-center">
                   <div className="relative group">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold cursor-pointer">
                       {getUserInitials()}
                     </div>
-                    {/* Tooltip that appears on hover */}
                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-800 text-white text-xs rounded py-1 px-2 whitespace-nowrap">
                       {getUserName()}
                       <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
                     </div>
                   </div>
-                  <span className="ml-2 text-sm font-medium hidden md:block">
-                    {getUserName()}
-                  </span>
+                  <span className="ml-2 text-sm font-medium hidden md:block">{getUserName()}</span>
                 </div>
 
-                {/* Sign out button */}
                 <Button
                   onClick={logout}
                   variant="secondary"
@@ -264,10 +210,25 @@ export default function DashboardLayout({
           </header>
 
           {/* Page content */}
-          <main className="flex-1 overflow-y-auto bg-gray-900">
-            {children}
-          </main>
+          <main className="flex-1 overflow-y-auto bg-gray-900">{children}</main>
         </div>
+
+        {/* Tooltip Portal */}
+        {tooltip &&
+          createPortal(
+            <div
+              className="fixed bg-gray-800 text-white text-xs rounded py-1 px-2 z-50 pointer-events-none shadow-lg"
+              style={{
+                top: tooltip.y,
+                left: tooltip.x,
+                transform: "translateY(-50%)",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {tooltip.text}
+            </div>,
+            document.body
+          )}
       </div>
     </AuthGuard>
   );
