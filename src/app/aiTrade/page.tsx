@@ -77,7 +77,7 @@ export default function AiTrade() {
 
   return (
     <PrivateLayout>
-      <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center px-4">
+      <div className="min-h-[80vh] bg-gray-900 flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8">
         <h1 className="text-2xl font-bold text-white mb-8">
           AI Trade Activation
         </h1>

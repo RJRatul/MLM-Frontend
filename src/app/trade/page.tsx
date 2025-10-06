@@ -20,8 +20,10 @@ export default function Trade() {
   const [chartData, setChartData] = useState<CandleData[]>([]);
   const [currentPrice, setCurrentPrice] = useState(0);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [currentTrend, setCurrentTrend] =
-    useState<"up" | "down" | "neutral">("neutral");
+  const [currentTrend, setCurrentTrend] = useState<"up" | "down" | "neutral">(
+    "neutral"
+  );
+  const [timeRemaining, setTimeRemaining] = useState(60);
 
   const currentCandleRef = useRef<CandleData | null>(null);
   const candleStartTimeRef = useRef<number>(0);
@@ -37,10 +39,9 @@ export default function Trade() {
     "DOT/USD": 20,
   };
 
-  const CANDLE_DURATION = 60_000; // 1 minute
+  const CANDLE_DURATION = 60_000; // 60 seconds
   const MAX_CANDLES = 500;
 
-  // initialize chart data when pair changes
   useEffect(() => {
     const initial = getInitialDataForPair(selectedPair);
     setChartData(initial);
@@ -58,9 +59,9 @@ export default function Trade() {
     };
     candleStartTimeRef.current = Date.now();
     lastUpdateTimeRef.current = Date.now();
+    setTimeRemaining(60);
   }, [selectedPair]);
 
-  // animation loop
   useEffect(() => {
     const animate = () => {
       const now = Date.now();
@@ -76,11 +77,16 @@ export default function Trade() {
       }
 
       const elapsed = now - candleStartTimeRef.current;
+      const remaining = Math.max(
+        0,
+        Math.ceil((CANDLE_DURATION - elapsed) / 1000)
+      );
+      setTimeRemaining(remaining);
+
       const base = basePrices[selectedPair] || 100;
-      const volatility = base * 0.002;
+      const volatility = base * 0.0005; // small candle movement
 
       if (elapsed >= CANDLE_DURATION) {
-        // push finished candle into history
         const finishedCandle = { ...currentCandleRef.current };
 
         setChartData((prev) => {
@@ -91,7 +97,6 @@ export default function Trade() {
 
         chartRef.current?.updateCurrentCandle?.(finishedCandle);
 
-        // start new candle
         const lastClose = finishedCandle.close;
         currentCandleRef.current = {
           time: Math.floor(now / 1000),
@@ -101,21 +106,22 @@ export default function Trade() {
           close: lastClose,
         };
         candleStartTimeRef.current = now;
+        setTimeRemaining(60);
       } else {
-        // live candle update
         const r = Math.random();
         let priceChange = 0;
         let newTrend: typeof currentTrend = "neutral";
 
         if (r < 0.4) {
-          priceChange = Math.random() * volatility * 0.8;
+          priceChange = Math.random() * volatility;
           newTrend = "up";
         } else if (r < 0.7) {
-          priceChange = -(Math.random() * volatility * 0.8);
+          priceChange = -(Math.random() * volatility);
           newTrend = "down";
         } else {
           priceChange = (Math.random() - 0.5) * volatility * 0.5;
         }
+
         setCurrentTrend(newTrend);
 
         const newPrice = Math.max(
@@ -149,15 +155,9 @@ export default function Trade() {
     setIsDrawerOpen(false);
   };
 
-  const getTimeRemaining = () => {
-    const elapsed = Date.now() - candleStartTimeRef.current;
-    const remaining = Math.max(0, CANDLE_DURATION - elapsed);
-    return Math.ceil(remaining / 1000);
-  };
-
   return (
     <PrivateLayout>
-      <div className="min-h-screen bg-gray-900 relative">
+      <div className="min-h-[80vh] bg-gray-900 relative p-3">
         <div className="flex flex-col gap-6">
           <div className="flex items-center justify-between">
             <Button
@@ -171,24 +171,6 @@ export default function Trade() {
             </Button>
 
             <div className="flex items-center gap-4">
-              {/* <div
-                className={`px-3 py-2 rounded-lg ${
-                  currentTrend === "up"
-                    ? "bg-green-600"
-                    : currentTrend === "down"
-                    ? "bg-red-600"
-                    : "bg-gray-600"
-                }`}
-              >
-                <span className="text-white font-mono">
-                  ${currentPrice.toFixed(2)}
-                </span>
-              </div>
-              <div className="bg-gray-700 px-3 py-2 rounded-lg">
-                <span className="text-white font-mono">
-                  {getTimeRemaining()}s
-                </span>
-              </div> */}
               <Link href="/aiTrade" passHref>
                 <Button
                   variant="primary"
@@ -208,6 +190,7 @@ export default function Trade() {
               data={chartData}
               pairName={selectedPair}
               currentPrice={currentPrice}
+              timeRemaining={timeRemaining}
             />
           </div>
         </div>

@@ -222,7 +222,7 @@ const getProgressData = (user: User | null): ProgressData => {
   };
   return (
     <PrivateLayout>
-      <div className="space-y-6">
+      <div className="space-y-6 p-4 sm:p-6 lg:p-8">
         {/* Header with Refresh Button */}
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold text-white">Refferal Bonus</h1>
