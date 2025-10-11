@@ -9,7 +9,7 @@ export default function SmallAiToggle() {
   const [isLoading, setIsLoading] = useState(false);
   const [isActiveTime, setIsActiveTime] = useState(false);
   const timeCheckRef = useRef<NodeJS.Timeout | null>(null);
-  const [showTooltip, setShowTooltip] = useState(false);
+  const toggleRef = useRef<HTMLButtonElement>(null);
 
   // Toast state
   const [toast, setToast] = useState<{
@@ -19,13 +19,13 @@ export default function SmallAiToggle() {
   }>({ message: "", color: "green", show: false });
   const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Check if current time is between 3:30 AM and 11:00 AM
+  // Check if current time is between 3:45 AM and 11:00 AM
   const checkTimeStatus = () => {
     const now = new Date();
     const hours = now.getHours();
     const minutes = now.getMinutes();
     const isTime =
-      (hours > 3 || (hours === 3 && minutes >= 30)) &&
+      (hours > 3 || (hours === 3 && minutes >= 35)) &&
       (hours < 11 || (hours === 11 && minutes === 0));
     setIsActiveTime(isTime);
   };
@@ -50,13 +50,20 @@ export default function SmallAiToggle() {
 
   // Toggle handler
   const handleToggle = async () => {
-    if (!isActiveTime || isLoading) return;
+    if (!isActiveTime) {
+      // Show disabled time toast when clicked outside active hours
+      showDisabledToast();
+      return;
+    }
+    
+    if (isLoading) return;
+    
     setIsLoading(true);
     try {
       const response = await apiService.toggleAiStatus();
       setIsActivated(response.aiStatus);
 
-      // Show toast
+      // Show activation toast
       showAiToast(response.aiStatus);
     } catch (err) {
       console.error("Failed to toggle AI:", err);
@@ -80,37 +87,51 @@ export default function SmallAiToggle() {
     }, 3000);
   };
 
+  const showDisabledToast = () => {
+    setToast({
+      message: "You can turn on AI Trade from 3:45 AM to 11:00 AM",
+      color: "red",
+      show: true,
+    });
+
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    toastTimeoutRef.current = setTimeout(() => {
+      setToast((prev) => ({ ...prev, show: false }));
+    }, 4000); // Slightly longer duration for informational message
+  };
+
+  // Calculate the translation distance based on container width and knob size
+  const getTranslateX = () => {
+    if (!toggleRef.current) return "0px";
+    
+    const containerWidth = toggleRef.current.offsetWidth;
+    const knobWidth = 24; // w-6 = 24px
+    
+    // Calculate the distance: container width - knob width - left padding
+    const translateDistance = containerWidth - knobWidth - 8; // 8px for left-1 (4px) and right spacing
+    return `${translateDistance}px`;
+  };
+
   return (
     <div className="relative flex items-center justify-center">
       <button
+        ref={toggleRef}
         onClick={handleToggle}
-        disabled={!isActiveTime || isLoading}
-        className={`relative flex items-center justify-center w-14 h-8 rounded-full transition-all duration-300 
+        disabled={isLoading}
+        className={`relative flex items-center justify-center w-40 lg:w-14 h-8 rounded-full transition-all duration-300 
           ${isActivated ? "bg-green-500" : "bg-gray-600"} 
-          ${!isActiveTime ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+          ${!isActiveTime ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
+          ${isLoading ? "opacity-70 cursor-wait" : ""}`}
       >
         {/* Knob */}
         <span
-          className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300
-            ${isActivated ? "translate-x-6" : "translate-x-0"}`}
-        />
-
-        {/* Robot icon */}
-        <FaRobot
-          className={`absolute w-4 h-4 text-white transition-opacity duration-300 ${
-            isActivated ? "opacity-100 right-1" : "opacity-100 left-1"
-          }`}
+          className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-300
+            ${isLoading ? "opacity-70" : ""}`}
+          style={{
+            transform: isActivated ? `translateX(${getTranslateX()})` : 'translateX(0)',
+          }}
         />
       </button>
-
-      {/* Tooltip */}
-      {showTooltip && (
-        <div className="absolute -bottom-8 left-0 bg-gray-600 text-white text-xs rounded-md px-3 py-1 shadow-md whitespace-nowrap z-20">
-          {isLoading
-            ? "Processing..."
-            : "AI trading available from 3:30 AM to 11:00 AM"}
-        </div>
-      )}
 
       {/* Toast */}
       {toast.show && (
