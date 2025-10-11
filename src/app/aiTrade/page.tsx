@@ -30,11 +30,11 @@ export default function AiTrade() {
     const minutes = now.getMinutes();
     
     // Active between 3:30 AM to 11:00 AM
-    const isTime = (hours > 3 || (hours === 3 && minutes >= 30)) && 
+    const isTime = (hours > 3 || (hours === 3 && minutes >= 35)) && 
                    (hours < 11 || (hours === 11 && minutes === 0));
     setIsActiveTime(isTime);
     setTimeStatus(
-      isTime ? "Trading window open" : "Come back tomorrow at 3:30 AM"
+      isTime ? "Trading window open" : "Come back tomorrow at 3:35 AM"
     );
   };
 
@@ -85,7 +85,7 @@ export default function AiTrade() {
         {/* Time info */}
         <div className="mb-6 text-center">
           <p className="text-gray-400">
-            Active only between 3:30 AM and 11:00 AM
+            Active only between 3:35 AM and 11:00 AM
           </p>
           <p className="text-gray-400">
             Auto-deactivation at 11:00 AM (server-side)
