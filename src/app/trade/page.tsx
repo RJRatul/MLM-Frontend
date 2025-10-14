@@ -239,7 +239,7 @@ export default function Trade() {
 
   return (
     <PrivateLayout>
-      <div className="min-h-[100vh] bg-gray-900 relative p-3">
+      <div className="min-h-[80vh] bg-gray-900 relative p-3">
         <div className="flex flex-col gap-6">
           <div className="flex items-center justify-between">
             <Button
@@ -252,7 +252,7 @@ export default function Trade() {
               Select Pair
             </Button>
 
-            <div className="hidden lg:flex items-center gap-4">
+            <div className="flex items-center gap-4">
               <Button variant="primary" size="sm" className="rounded-full">
                 <FaRobot className="w-4 h-4" />
               </Button>
@@ -271,13 +271,13 @@ export default function Trade() {
             />
           </div>
 
-          <div className="block lg:hidden">
+          {/* <div className="block lg:hidden">
             <div className="flex items-center justify-evenly p-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700">
               <p className="text-white text-sm">Turn on your AI Trade</p>
               <FaRobot className="w-4 h-4" />
               <SmallAiToggle />
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Drawer */}
