@@ -46,9 +46,11 @@ export default function UserPairsList({
         return (
           <div
             key={pair._id}
-            className={`rounded-lg p-4 cursor-pointer transition-colors
-              ${isActive ? "bg-gray-700 ring-2 ring-green-500"
-                          : "bg-gray-800 hover:bg-gray-700/50"}`}
+            className={`rounded-lg p-4 cursor-pointer transition-colors ${
+              isActive
+                ? "bg-gray-700 ring-2 ring-green-500"
+                : "bg-gray-800 hover:bg-gray-700/50"
+            }`}
             onClick={() => onPairSelect?.(pair.pairName)}
           >
             <div className="flex items-center space-x-3">

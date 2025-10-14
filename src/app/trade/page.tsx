@@ -6,26 +6,16 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import PrivateLayout from "@/layouts/PrivateLayout";
 import TradingChart, { ChartHandle } from "@/components/TradingChart";
-import { getInitialDataForPair, CandleData } from "@/utils/generateChartData";
-import Link from "next/link";
+import {
+  getInitialDataForPair,
+  CandleData,
+  generateNewPattern,
+  generateIntraCandleMovement,
+} from "@/utils/generateChartData";
 import Button from "@/components/Button";
 import { FaPlus, FaRobot } from "react-icons/fa";
 import UserPairsList from "@/components/UserPairsList";
 import SmallAiToggle from "@/components/SmallAiToggle";
-
-// Interfaces for candle pattern state
-interface CandlePattern {
-  trend: "bullish" | "bearish" | "consolidation";
-  strength: number; // 0-1
-  duration: number; // in updates
-  volatility: number; // 0-1
-}
-
-type IntraCandleMovement = {
-  direction: "up" | "down";
-  startPrice: number;
-  targetExtreme: number;
-};
 
 export default function Trade() {
   const { user } = useAuth();
@@ -46,207 +36,75 @@ export default function Trade() {
   const chartRef = useRef<ChartHandle | null>(null);
   const lastUpdateTimeRef = useRef<number>(0);
 
-  // New refs for pattern-based generation
-  const currentPatternRef = useRef<CandlePattern>({
-    trend: "consolidation",
-    strength: 0.5,
-    duration: 0,
-    volatility: 0.3,
-  });
+  const currentPatternRef = useRef(generateNewPattern());
   const patternProgressRef = useRef<number>(0);
-  const intraCandleMovementRef = useRef<IntraCandleMovement | null>(null);
+  const intraCandleMovementRef = useRef<any>(null);
 
-  const basePrices: Record<string, number> = {
-    "BTC/USD": 500,
-    "ETH/USD": 300,
-    "XRP/USD": 0.5,
-    "ADA/USD": 0.4,
-    "DOT/USD": 20,
-  };
+  const globalHistoryRef = useRef<CandleData[] | null>(null);
 
   const CANDLE_DURATION = 60_000; // 60 seconds
   const MAX_CANDLES = 500;
 
-  // Generate realistic candle patterns
-  const generateNewPattern = (): CandlePattern => {
-    const rand = Math.random();
-
-    if (rand < 0.4) {
-      // Bullish pattern
-      return {
-        trend: "bullish",
-        strength: 0.3 + Math.random() * 0.5, // 0.3-0.8
-        duration: 3 + Math.floor(Math.random() * 5), // 3-7 candles
-        volatility: 0.2 + Math.random() * 0.3, // 0.2-0.5
-      };
-    } else if (rand < 0.7) {
-      // Bearish pattern
-      return {
-        trend: "bearish",
-        strength: 0.3 + Math.random() * 0.5, // 0.3-0.8
-        duration: 3 + Math.floor(Math.random() * 5), // 3-7 candles
-        volatility: 0.2 + Math.random() * 0.3, // 0.2-0.5
-      };
-    } else if (rand < 0.85) {
-      // Strong trend
-      const isBullish = Math.random() > 0.5;
-      return {
-        trend: isBullish ? "bullish" : "bearish",
-        strength: 0.6 + Math.random() * 0.4, // 0.6-1.0
-        duration: 5 + Math.floor(Math.random() * 8), // 5-12 candles
-        volatility: 0.4 + Math.random() * 0.4, // 0.4-0.8
-      };
-    } else {
-      // Consolidation/doji pattern
-      return {
-        trend: "consolidation",
-        strength: 0.1 + Math.random() * 0.2, // 0.1-0.3
-        duration: 2 + Math.floor(Math.random() * 4), // 2-5 candles
-        volatility: 0.1 + Math.random() * 0.2, // 0.1-0.3
-      };
-    }
-  };
-
-  // Generate intra-candle movement (price goes both ways during candle formation)
-  const generateIntraCandleMovement = (
-    openPrice: number,
-    pattern: CandlePattern
-  ): IntraCandleMovement => {
-    const baseVolatility =
-      basePrices[selectedPair] * 0.002 * pattern.volatility;
-    const willReverse = Math.random() < 0.7; // 70% chance of intra-candle reversal
-
-    if (pattern.trend === "bullish") {
-      if (willReverse) {
-        // Price goes down first, then up
-        const dip = openPrice - baseVolatility * (0.2 + Math.random() * 0.3);
-        return {
-          direction: "down",
-          startPrice: openPrice,
-          targetExtreme: Math.max(openPrice * 0.99, dip), // Max 1% dip
-        };
-      } else {
-        // Price goes up strongly
-        return {
-          direction: "up",
-          startPrice: openPrice,
-          targetExtreme:
-            openPrice + baseVolatility * (0.5 + Math.random() * 0.5),
-        };
-      }
-    } else if (pattern.trend === "bearish") {
-      if (willReverse) {
-        // Price goes up first, then down
-        const spike = openPrice + baseVolatility * (0.2 + Math.random() * 0.3);
-        return {
-          direction: "up",
-          startPrice: openPrice,
-          targetExtreme: Math.min(openPrice * 1.01, spike), // Max 1% spike
-        };
-      } else {
-        // Price goes down strongly
-        return {
-          direction: "down",
-          startPrice: openPrice,
-          targetExtreme:
-            openPrice - baseVolatility * (0.5 + Math.random() * 0.5),
-        };
-      }
-    } else {
-      // Consolidation - small movements in both directions
-      const smallMove = openPrice * (Math.random() < 0.5 ? 0.998 : 1.002);
-      const direction: "up" | "down" = Math.random() < 0.5 ? "up" : "down";
-      return {
-        direction,
-        startPrice: openPrice,
-        targetExtreme: smallMove,
-      };
-    }
-  };
-
-  // Calculate price based on current pattern and intra-candle movement
-  const calculateNewPrice = (
-    currentPrice: number,
-    elapsedRatio: number
-  ): number => {
-    const base = basePrices[selectedPair] || 100;
-    const pattern = currentPatternRef.current;
-    const baseVolatility = base * 0.002 * pattern.volatility;
-
-    // If we have an active intra-candle movement
-    if (intraCandleMovementRef.current) {
-      const movement = intraCandleMovementRef.current;
-      const progress = Math.min(1, elapsedRatio * 2); // Intra-candle movement happens in first half
-
-      if (progress < 1) {
-        // Moving toward the extreme
-        const distance = movement.targetExtreme - movement.startPrice;
-        return movement.startPrice + distance * progress;
-      } else {
-        // After reaching extreme, move toward final candle direction
-        const finalProgress = (elapsedRatio - 0.5) * 2; // 0-1 in second half
-
-        let finalDirection: number;
-        if (pattern.trend === "bullish") {
-          finalDirection =
-            movement.targetExtreme +
-            baseVolatility * pattern.strength * finalProgress;
-        } else if (pattern.trend === "bearish") {
-          finalDirection =
-            movement.targetExtreme -
-            baseVolatility * pattern.strength * finalProgress;
-        } else {
-          // Small random movement around the extreme for consolidation
-          finalDirection =
-            movement.targetExtreme +
-            (Math.random() - 0.5) * baseVolatility * 0.3;
-        }
-
-        return finalDirection;
-      }
-    }
-
-    // Fallback to simple pattern-based movement
-    let movement = 0;
-    if (pattern.trend === "bullish") {
-      movement = baseVolatility * pattern.strength * elapsedRatio;
-    } else if (pattern.trend === "bearish") {
-      movement = -baseVolatility * pattern.strength * elapsedRatio;
-    } else {
-      movement = (Math.random() - 0.5) * baseVolatility * 0.5;
-    }
-
-    return currentPrice + movement;
-  };
-
+  // Initialize global history once
   useEffect(() => {
-    const initial = getInitialDataForPair(selectedPair);
+    if (!globalHistoryRef.current) {
+      globalHistoryRef.current = getInitialDataForPair("shared");
+    }
+    const initial = globalHistoryRef.current!;
     setChartData(initial);
 
-    const base = basePrices[selectedPair] || 100;
-    setCurrentPrice(base);
-
     const last = initial[initial.length - 1];
-    currentCandleRef.current = {
-      time: Math.floor(Date.now() / 1000),
-      open: last.close,
-      high: last.close,
-      low: last.close,
-      close: last.close,
-    };
+    setCurrentPrice(last.close);
+
+    currentCandleRef.current = { ...last };
     candleStartTimeRef.current = Date.now();
     lastUpdateTimeRef.current = Date.now();
     setTimeRemaining(60);
 
-    // Initialize first pattern
     currentPatternRef.current = generateNewPattern();
     patternProgressRef.current = 0;
+    intraCandleMovementRef.current = generateIntraCandleMovement(
+      last.close,
+      currentPatternRef.current
+    );
+  }, []);
+
+  // Handle pair change
+  useEffect(() => {
+    if (!selectedPair) return;
+
+    const initialData =
+      getInitialDataForPair(selectedPair) || globalHistoryRef.current || [];
+    setChartData(initialData);
+    const lastCandleTime =
+      chartData[chartData.length - 1]?.time || Math.floor(Date.now() / 1000);
+    const lastCandle = initialData[initialData.length - 1] || {
+      time: lastCandleTime + 1,
+      open: 100,
+      high: 100,
+      low: 100,
+      close: 100,
+    };
+
+    currentCandleRef.current = { ...lastCandle };
+    candleStartTimeRef.current = Date.now();
+    lastUpdateTimeRef.current = Date.now();
+    setCurrentPrice(lastCandle.close);
+    setTimeRemaining(60);
+
+    currentPatternRef.current = generateNewPattern();
+    patternProgressRef.current = 0;
+    intraCandleMovementRef.current = generateIntraCandleMovement(
+      lastCandle.close,
+      currentPatternRef.current
+    );
   }, [selectedPair]);
 
+  // Animation loop
   useEffect(() => {
     const animate = () => {
       const now = Date.now();
-      if (now - lastUpdateTimeRef.current < 500) {
+      if (now - lastUpdateTimeRef.current < 200) {
         animationRef.current = requestAnimationFrame(animate);
         return;
       }
@@ -267,37 +125,40 @@ export default function Trade() {
       const elapsedRatio = elapsed / CANDLE_DURATION;
 
       if (elapsed >= CANDLE_DURATION) {
-        // Finish current candle
+        // Finish candle
         const finishedCandle = { ...currentCandleRef.current };
 
         setChartData((prev) => {
           const updated = [...prev, finishedCandle];
           if (updated.length > MAX_CANDLES) updated.shift();
+          globalHistoryRef.current = updated;
           return updated;
         });
 
-        chartRef.current?.updateCurrentCandle?.(finishedCandle);
+        chartRef.current?.updateCurrentCandle(finishedCandle);
 
         // Start new candle
         const lastClose = finishedCandle.close;
+        const lastCandleTime =
+          chartData[chartData.length - 1]?.time ||
+          Math.floor(Date.now() / 1000);
         currentCandleRef.current = {
-          time: Math.floor(now / 1000),
+          time: lastCandleTime + 1, // ensure strictly increasing
           open: lastClose,
           high: lastClose,
           low: lastClose,
           close: lastClose,
         };
+
         candleStartTimeRef.current = now;
         setTimeRemaining(60);
 
-        // Update pattern progress or generate new pattern
         patternProgressRef.current++;
         if (patternProgressRef.current >= currentPatternRef.current.duration) {
           currentPatternRef.current = generateNewPattern();
           patternProgressRef.current = 0;
         }
 
-        // Generate intra-candle movement for the new candle
         intraCandleMovementRef.current = generateIntraCandleMovement(
           lastClose,
           currentPatternRef.current
@@ -317,14 +178,10 @@ export default function Trade() {
         );
         setCurrentPrice(newPrice);
 
-        // Determine current trend for UI
-        if (newPrice > currentCandleRef.current.open) {
-          setCurrentTrend("up");
-        } else if (newPrice < currentCandleRef.current.open) {
+        if (newPrice > currentCandleRef.current.open) setCurrentTrend("up");
+        else if (newPrice < currentCandleRef.current.open)
           setCurrentTrend("down");
-        } else {
-          setCurrentTrend("neutral");
-        }
+        else setCurrentTrend("neutral");
 
         const updated = {
           ...currentCandleRef.current,
@@ -344,7 +201,43 @@ export default function Trade() {
     return () => {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
-  }, [selectedPair]);
+  }, []);
+
+  const calculateNewPrice = (openPrice: number, elapsedRatio: number) => {
+    const pattern = currentPatternRef.current;
+    const baseVolatility = openPrice * 0.001 * (0.5 + pattern.volatility);
+
+    const movement = intraCandleMovementRef.current;
+    if (movement) {
+      const progress = Math.min(1, elapsedRatio * 2);
+      if (progress < 1)
+        return (
+          movement.startPrice +
+          (movement.targetExtreme - movement.startPrice) * progress
+        );
+      const finalProgress = (elapsedRatio - 0.5) * 2;
+      if (pattern.trend === "bullish")
+        return (
+          movement.targetExtreme +
+          baseVolatility * pattern.strength * finalProgress
+        );
+      else if (pattern.trend === "bearish")
+        return (
+          movement.targetExtreme -
+          baseVolatility * pattern.strength * finalProgress
+        );
+      else
+        return (
+          movement.targetExtreme + (Math.random() - 0.5) * baseVolatility * 0.2
+        );
+    }
+
+    if (pattern.trend === "bullish")
+      return openPrice + baseVolatility * pattern.strength * elapsedRatio;
+    else if (pattern.trend === "bearish")
+      return openPrice - baseVolatility * pattern.strength * elapsedRatio;
+    else return openPrice + (Math.random() - 0.5) * baseVolatility * 0.2;
+  };
 
   const handlePairSelect = (pairName: string) => {
     setSelectedPair(pairName);
@@ -376,6 +269,7 @@ export default function Trade() {
 
           <div className="flex-1">
             <TradingChart
+              key={selectedPair} // forces reload
               ref={chartRef}
               data={chartData}
               pairName={selectedPair}
@@ -383,8 +277,9 @@ export default function Trade() {
               timeRemaining={timeRemaining}
             />
           </div>
+
           <div className="block lg:hidden">
-            <div className="flex items-center justify-evenly p-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed focus:ring-blue-500">
+            <div className="flex items-center justify-evenly p-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700">
               <p className="text-white text-sm">Turn on your AI Trade</p>
               <FaRobot className="w-4 h-4" />
               <SmallAiToggle />
@@ -392,7 +287,7 @@ export default function Trade() {
           </div>
         </div>
 
-        {/* Left Drawer */}
+        {/* Drawer */}
         <div
           className={`fixed top-0 left-0 h-full w-80 bg-gray-800 shadow-xl transform transition-transform duration-300 z-50
             ${isDrawerOpen ? "translate-x-0" : "-translate-x-full"}`}
