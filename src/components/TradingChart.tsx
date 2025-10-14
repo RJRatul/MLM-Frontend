@@ -27,6 +27,7 @@ const TradingChart = forwardRef<ChartHandle, TradingChartProps>(
     const chartRef = useRef<IChartApi | null>(null);
     const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
 
+    // Expose updateCurrentCandle to parent
     useImperativeHandle(ref, () => ({
       updateCurrentCandle: (candle: CandleData) => {
         if (!seriesRef.current) return;
@@ -40,21 +41,31 @@ const TradingChart = forwardRef<ChartHandle, TradingChartProps>(
       },
     }));
 
+    // Ensure strictly ascending time
     const formatData = (raw: CandleData[]): CandlestickData[] =>
-      raw.map((d) => ({
-        time: d.time as Time,
-        open: d.open,
-        high: d.high,
-        low: d.low,
-        close: d.close,
-      }));
+      raw
+        .slice()
+        .sort((a, b) => a.time - b.time)
+        .map((d) => ({
+          time: d.time as Time,
+          open: d.open,
+          high: d.high,
+          low: d.low,
+          close: d.close,
+        }));
 
     useEffect(() => {
       if (!chartContainerRef.current) return;
 
       const chart = createChart(chartContainerRef.current, {
-        layout: { background: { type: ColorType.Solid, color: "#1f2937" }, textColor: "#cccccc" },
-        grid: { vertLines: { color: "#141b23" }, horzLines: { color: "#141b23" } },
+        layout: {
+          background: { type: ColorType.Solid, color: "#1f2937" },
+          textColor: "#cccccc",
+        },
+        grid: {
+          vertLines: { color: "#141b23" },
+          horzLines: { color: "#141b23" },
+        },
         width: chartContainerRef.current.clientWidth,
         height: 500,
         rightPriceScale: { borderColor: "#1e2a35", scaleMargins: { top: 0.15, bottom: 0.15 } },
@@ -85,7 +96,10 @@ const TradingChart = forwardRef<ChartHandle, TradingChartProps>(
         priceLineVisible: true,
       });
 
-      candleSeries.setData(formatData(data));
+      // Deduplicate times before setting data
+      const dedupedData = Array.from(new Map(data.map(d => [d.time, d])).values());
+
+      candleSeries.setData(formatData(dedupedData));
 
       chartRef.current = chart;
       seriesRef.current = candleSeries;

@@ -25,9 +25,7 @@ export default function Trade() {
   const [chartData, setChartData] = useState<CandleData[]>([]);
   const [currentPrice, setCurrentPrice] = useState(0);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [currentTrend, setCurrentTrend] = useState<"up" | "down" | "neutral">(
-    "neutral"
-  );
+  const [currentTrend, setCurrentTrend] = useState<"up" | "down" | "neutral">("neutral");
   const [timeRemaining, setTimeRemaining] = useState(60);
 
   const currentCandleRef = useRef<CandleData | null>(null);
@@ -48,8 +46,13 @@ export default function Trade() {
   // Initialize global history once
   useEffect(() => {
     if (!globalHistoryRef.current) {
-      globalHistoryRef.current = getInitialDataForPair("shared");
+      const initial = getInitialDataForPair("shared");
+      // Deduplicate & sort times
+      globalHistoryRef.current = Array.from(
+        new Map(initial.map(d => [d.time, d])).values()
+      ).sort((a, b) => a.time - b.time);
     }
+
     const initial = globalHistoryRef.current!;
     setChartData(initial);
 
@@ -75,11 +78,14 @@ export default function Trade() {
 
     const initialData =
       getInitialDataForPair(selectedPair) || globalHistoryRef.current || [];
-    setChartData(initialData);
-    const lastCandleTime =
-      chartData[chartData.length - 1]?.time || Math.floor(Date.now() / 1000);
-    const lastCandle = initialData[initialData.length - 1] || {
-      time: lastCandleTime + 1,
+    const cleanData = Array.from(
+      new Map(initialData.map(d => [d.time, d])).values()
+    ).sort((a, b) => a.time - b.time);
+
+    setChartData(cleanData);
+
+    const lastCandle = cleanData[cleanData.length - 1] || {
+      time: Math.floor(Date.now() / 1000),
       open: 100,
       high: 100,
       low: 100,
@@ -116,10 +122,7 @@ export default function Trade() {
       }
 
       const elapsed = now - candleStartTimeRef.current;
-      const remaining = Math.max(
-        0,
-        Math.ceil((CANDLE_DURATION - elapsed) / 1000)
-      );
+      const remaining = Math.max(0, Math.ceil((CANDLE_DURATION - elapsed) / 1000));
       setTimeRemaining(remaining);
 
       const elapsedRatio = elapsed / CANDLE_DURATION;
@@ -128,11 +131,16 @@ export default function Trade() {
         // Finish candle
         const finishedCandle = { ...currentCandleRef.current };
 
-        setChartData((prev) => {
+        setChartData(prev => {
           const updated = [...prev, finishedCandle];
           if (updated.length > MAX_CANDLES) updated.shift();
-          globalHistoryRef.current = updated;
-          return updated;
+
+          const uniqueSorted = Array.from(
+            new Map(updated.map(d => [d.time, d])).values()
+          ).sort((a, b) => a.time - b.time);
+
+          globalHistoryRef.current = uniqueSorted;
+          return uniqueSorted;
         });
 
         chartRef.current?.updateCurrentCandle(finishedCandle);
@@ -140,10 +148,10 @@ export default function Trade() {
         // Start new candle
         const lastClose = finishedCandle.close;
         const lastCandleTime =
-          chartData[chartData.length - 1]?.time ||
-          Math.floor(Date.now() / 1000);
+          chartData[chartData.length - 1]?.time || Math.floor(Date.now() / 1000);
+
         currentCandleRef.current = {
-          time: lastCandleTime + 1, // ensure strictly increasing
+          time: lastCandleTime + 60,
           open: lastClose,
           high: lastClose,
           low: lastClose,
@@ -172,15 +180,11 @@ export default function Trade() {
           );
         }
 
-        const newPrice = calculateNewPrice(
-          currentCandleRef.current.open,
-          elapsedRatio
-        );
+        const newPrice = calculateNewPrice(currentCandleRef.current.open, elapsedRatio);
         setCurrentPrice(newPrice);
 
         if (newPrice > currentCandleRef.current.open) setCurrentTrend("up");
-        else if (newPrice < currentCandleRef.current.open)
-          setCurrentTrend("down");
+        else if (newPrice < currentCandleRef.current.open) setCurrentTrend("down");
         else setCurrentTrend("neutral");
 
         const updated = {
@@ -201,7 +205,7 @@ export default function Trade() {
     return () => {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
-  }, []);
+  }, [chartData]);
 
   const calculateNewPrice = (openPrice: number, elapsedRatio: number) => {
     const pattern = currentPatternRef.current;
@@ -211,25 +215,14 @@ export default function Trade() {
     if (movement) {
       const progress = Math.min(1, elapsedRatio * 2);
       if (progress < 1)
-        return (
-          movement.startPrice +
-          (movement.targetExtreme - movement.startPrice) * progress
-        );
+        return movement.startPrice + (movement.targetExtreme - movement.startPrice) * progress;
+
       const finalProgress = (elapsedRatio - 0.5) * 2;
       if (pattern.trend === "bullish")
-        return (
-          movement.targetExtreme +
-          baseVolatility * pattern.strength * finalProgress
-        );
+        return movement.targetExtreme + baseVolatility * pattern.strength * finalProgress;
       else if (pattern.trend === "bearish")
-        return (
-          movement.targetExtreme -
-          baseVolatility * pattern.strength * finalProgress
-        );
-      else
-        return (
-          movement.targetExtreme + (Math.random() - 0.5) * baseVolatility * 0.2
-        );
+        return movement.targetExtreme - baseVolatility * pattern.strength * finalProgress;
+      else return movement.targetExtreme + (Math.random() - 0.5) * baseVolatility * 0.2;
     }
 
     if (pattern.trend === "bullish")
@@ -269,7 +262,7 @@ export default function Trade() {
 
           <div className="flex-1">
             <TradingChart
-              key={selectedPair} // forces reload
+              key={selectedPair}
               ref={chartRef}
               data={chartData}
               pairName={selectedPair}
@@ -302,10 +295,7 @@ export default function Trade() {
             </button>
           </div>
           <div className="p-4 overflow-y-auto h-full">
-            <UserPairsList
-              onPairSelect={handlePairSelect}
-              selectedPair={selectedPair}
-            />
+            <UserPairsList onPairSelect={handlePairSelect} selectedPair={selectedPair} />
           </div>
         </div>
 
