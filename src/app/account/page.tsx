@@ -52,6 +52,7 @@ export default function AccountPage() {
             {/* Basic Info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <InfoRow icon={<FaUser />} label="Name" value={`${profile.firstName} ${profile.lastName}`} />
+              <InfoRow icon={<FaUser />} label="ID" value={`${profile.userId}`} />
               <InfoRow icon={<FaEnvelope />} label="Email" value={profile.email} />
               <InfoRow icon={<FaMoneyBill />} label="Balance" value={`$${profile.balance?.toFixed(2)}`} />
               <InfoRow

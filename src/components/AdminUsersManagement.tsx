@@ -99,6 +99,7 @@ export default function AdminUsersManagement() {
         <table className="w-full">
           <thead>
             <tr className="border-b border-gray-700">
+              <th className="px-4 py-3 text-left text-sm text-gray-400">User ID</th>
               <th className="px-4 py-3 text-left text-sm text-gray-400">Name</th>
               <th className="px-4 py-3 text-left text-sm text-gray-400">Email</th>
               <th className="px-4 py-3 text-left text-sm text-gray-400">Balance</th>
@@ -111,6 +112,9 @@ export default function AdminUsersManagement() {
           <tbody>
             {users.map((user) => (
               <tr key={user._id} className="border-b border-gray-700 hover:bg-gray-700/50">
+                <td className="px-4 py-3 text-white">
+                  {user.userId}
+                </td>
                 <td className="px-4 py-3 text-white">
                   {user.firstName} {user.lastName}
                 </td>
