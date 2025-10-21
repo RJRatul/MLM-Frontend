@@ -41,7 +41,7 @@ export default function Home() {
               </div>
             </Link>
             
-            <Link href="/about" className="flex items-center text-gray-400 hover:text-blue-300 group transition-colors w-full sm:w-auto justify-center">
+            <Link href="/#how-it-works" className="flex items-center text-gray-400 hover:text-blue-300 group transition-colors w-full sm:w-auto justify-center">
               <FaQuestionCircle className="mr-2 text-purple-400" />
               How It Works
             </Link>
