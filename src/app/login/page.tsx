@@ -15,6 +15,9 @@ import {
   FaEnvelope,
   FaEyeSlash,
   FaEye,
+  FaTimes,
+  FaCopy,
+  FaCheck,
 } from "react-icons/fa";
 
 export default function Login() {
@@ -23,6 +26,8 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const router = useRouter();
   const { login } = useAuth();
@@ -40,6 +45,31 @@ export default function Login() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleForgotPassword = () => {
+    setShowForgotPasswordModal(true);
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const getEmailSubject = () => {
+    const userEmail = email.toUpperCase();
+    return `Forgot Password: ${userEmail}`;
+  };
+
+  const getEmailBody = () => {
+    return `Hello BeeCoin Support,\n\nI have forgotten my password and need assistance resetting it.\n\nMy email address is: ${email}\n\nPlease help me reset my password.\n\nThank you.`;
+  };
+
+  const getMailToLink = () => {
+    const subject = getEmailSubject();
+    const body = getEmailBody();
+    return `mailto:beecoin.aitrading@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };
 
   return (
@@ -138,6 +168,17 @@ export default function Login() {
                 </div>
               </div>
 
+              {/* Forgot Password Link */}
+              <div className="text-right">
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  className="text-sm text-blue-400 hover:text-blue-300 transition-colors cursor-pointer"
+                >
+                  Forgot your password?
+                </button>
+              </div>
+
               <div>
                 <Button
                   type="submit"
@@ -178,6 +219,103 @@ export default function Login() {
             </div>
           </div>
         </div>
+
+        {/* Forgot Password Modal */}
+        {showForgotPasswordModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-gray-800 rounded-2xl p-6 w-full max-w-md border border-gray-700">
+              {/* Modal Header */}
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-white">
+                  Forgot Password
+                </h3>
+                <button
+                  onClick={() => setShowForgotPasswordModal(false)}
+                  className="text-gray-400 hover:text-white transition-colors cursor-pointer"
+                >
+                  <FaTimes className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Modal Content */}
+              <div className="space-y-4">
+                <p className="text-gray-300 text-sm">
+                  If you have forgotten your password, please contact our support team by email. We&apos;ll help you reset your password as soon as possible.
+                </p>
+
+                <div className="bg-gray-700/50 rounded-lg p-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium text-gray-300">
+                      Support Email:
+                    </span>
+                    <button
+                      onClick={() => copyToClipboard("beecoin.aitrading@gmail.com")}
+                      className="cursor-pointer flex items-center space-x-1 text-blue-400 hover:text-blue-300 transition-colors text-sm"
+                    >
+                      {copied ? (
+                        <>
+                          <FaCheck className="h-3 w-3" />
+                          <span>Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <FaCopy className="h-3 w-3" />
+                          <span>Copy</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  <code className="text-blue-400 text-sm break-all">
+                    beecoin.aitrading@gmail.com
+                  </code>
+                </div>
+
+                <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
+                  <p className="text-yellow-300 text-xs">
+                    💡 <strong>Important:</strong> In the email subject, please use your email address in capital letters. For example:{" "}
+                    <strong>&quot;Forgot Password: {email ? email.toUpperCase() : 'YOUREMAIL@EXAMPLE.COM'}&quot;</strong>
+                  </p>
+                </div>
+
+                <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3">
+                  <p className="text-green-300 text-xs">
+                    ⏱️ Our support team will reach out to you within 48 hours to help reset your password.
+                  </p>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex space-x-3 pt-2">
+                  <Button
+                    href={getMailToLink()}
+                    variant="primary"
+                    className="flex-1"
+                    onClick={() => setShowForgotPasswordModal(false)}
+                  >
+                    Open Email Client
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setShowForgotPasswordModal(false)}
+                    className="flex-1"
+                  >
+                    Close
+                  </Button>
+                </div>
+
+                {/* Manual Instructions */}
+                <div className="text-xs text-gray-400 mt-4">
+                  <p>If the email client doesn&apos;t open automatically:</p>
+                  <ol className="list-decimal list-inside mt-1 space-y-1">
+                    <li>Open your email client manually</li>
+                    <li>Send email to: <strong>beecoin.aitrading@gmail.com</strong></li>
+                    <li>Subject: <strong>Forgot Password: {email ? email.toUpperCase() : 'YOUR_EMAIL'}</strong></li>
+                    <li>Include your registered email address in the body</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </AuthGuard>
   );
