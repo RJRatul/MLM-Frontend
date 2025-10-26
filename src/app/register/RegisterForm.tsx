@@ -16,6 +16,8 @@ import {
   FaUserPlus,
   FaSignInAlt,
   FaGift,
+  FaEye,
+  FaEyeSlash,
 } from "react-icons/fa";
 
 export default function RegisterForm() {
@@ -26,6 +28,7 @@ export default function RegisterForm() {
     password: "",
     referralCode: "",
   });
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
@@ -63,6 +66,10 @@ export default function RegisterForm() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   return (
@@ -190,14 +197,25 @@ export default function RegisterForm() {
                   <input
                     id="password"
                     name="password"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     autoComplete="new-password"
                     required
                     value={formData.password}
                     onChange={handleChange}
-                    className="block w-full pl-10 pr-3 py-2 bg-gray-700/50 border border-gray-600 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white sm:text-sm"
+                    className="block w-full pl-10 pr-10 py-2 bg-gray-700/50 border border-gray-600 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white sm:text-sm"
                     placeholder="Create a secure password"
                   />
+                  <button
+                    type="button"
+                    className="cursor-pointer absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-300 transition-colors"
+                    onClick={togglePasswordVisibility}
+                  >
+                    {showPassword ? (
+                      <FaEyeSlash className="h-5 w-5" />
+                    ) : (
+                      <FaEye className="h-5 w-5" />
+                    )}
+                  </button>
                 </div>
               </div>
 
