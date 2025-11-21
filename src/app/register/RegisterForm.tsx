@@ -94,7 +94,7 @@ export default function RegisterForm() {
               Create your BeeCoin account
             </h2>
             <p className="mt-2 text-sm text-gray-400">
-              Join the next generation AI-powered trading platform
+              Join the next generation ALGO-powered trading platform
             </p>
           </div>
 

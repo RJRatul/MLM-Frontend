@@ -27,12 +27,9 @@ export interface UpdateUserStatusRequest {
 }
 
 export interface UpdateUserRequest {
-  firstName?: string;
-  lastName?: string;
-  balance?: number;
-  isAdmin?: boolean;
-  aiStatus?: boolean;
-  status?: 'active' | 'inactive';
+  firstName: string;
+  lastName: string;
+  balance: number;
 }
 
 class AdminUsersApiService {
@@ -116,7 +113,7 @@ class AdminUsersApiService {
     });
   }
 
-  // Update user profile
+  // Update user profile - NEW METHOD
   async updateUser(id: string, userData: UpdateUserRequest): Promise<{ message: string; user: User }> {
     return this.request<{ message: string; user: User }>(`/admin/users/${id}`, {
       method: 'PUT',

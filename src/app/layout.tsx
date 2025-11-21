@@ -6,9 +6,9 @@ import { AuthProvider } from "@/contexts/AuthContext";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "BeeCoin - AI Trading & Business Ecosystem",
+  title: "BeeCoin - ALGO Trading & Business Ecosystem",
   description:
-    "beecoin.cloud combines advanced AI crypto trading with network building. Grow your wealth automatically while building sustainable income streams through our blockchain platform.",
+    "beecoin.cloud combines advanced ALGO crypto trading with network building. Grow your wealth automatically while building sustainable income streams through our blockchain platform.",
 };
 
 export default function RootLayout({

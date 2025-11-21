@@ -3,8 +3,8 @@
 
 import { useState, useEffect } from "react";
 import Button from "@/components/Button";
-import { FaSearch, FaEdit, FaToggleOn, FaToggleOff, FaUserCheck, FaUserSlash } from "react-icons/fa";
-import { adminUsersApiService, User } from "@/services/adminUsersApi";
+import { FaSearch, FaEdit, FaUserCheck, FaUserSlash } from "react-icons/fa";
+import { adminUsersApiService, User, UpdateUserRequest } from "@/services/adminUsersApi";
 
 export default function AdminUsersManagement() {
   const [users, setUsers] = useState<User[]>([]);
@@ -14,6 +14,7 @@ export default function AdminUsersManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     loadUsers();
@@ -47,6 +48,32 @@ export default function AdminUsersManagement() {
   const openEditModal = (user: User) => {
     setSelectedUser(user);
     setShowEditModal(true);
+  };
+
+  const handleUpdateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedUser) return;
+
+    try {
+      setIsUpdating(true);
+      
+      const updateData: UpdateUserRequest = {
+        firstName: selectedUser.firstName,
+        lastName: selectedUser.lastName,
+        balance: selectedUser.balance
+      };
+
+      await adminUsersApiService.updateUser(selectedUser._id, updateData);
+      
+      alert('User updated successfully!');
+      setShowEditModal(false);
+      await loadUsers(); // Reload users to reflect changes
+    } catch (error: any) {
+      console.error("Failed to update user:", error);
+      alert(error.message || "Failed to update user");
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -103,7 +130,7 @@ export default function AdminUsersManagement() {
               <th className="px-4 py-3 text-left text-sm text-gray-400">Name</th>
               <th className="px-4 py-3 text-left text-sm text-gray-400">Email</th>
               <th className="px-4 py-3 text-left text-sm text-gray-400">Balance</th>
-              <th className="px-4 py-3 text-left text-sm text-gray-400">AI Status</th>
+              <th className="px-4 py-3 text-left text-sm text-gray-400">ALGO Status</th>
               <th className="px-4 py-3 text-left text-sm text-gray-400">Admin</th>
               <th className="px-4 py-3 text-left text-sm text-gray-400">Status</th>
               <th className="px-4 py-3 text-left text-sm text-gray-400">Actions</th>
@@ -119,7 +146,7 @@ export default function AdminUsersManagement() {
                   {user.firstName} {user.lastName}
                 </td>
                 <td className="px-4 py-3 text-white">{user.email}</td>
-                <td className="px-4 py-3 text-white font-mono">${user.balance}</td>
+                <td className="px-4 py-3 text-white font-mono">${user.balance.toFixed(2)}</td>
                 <td className="px-4 py-3">
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                     user.aiStatus 
@@ -205,11 +232,7 @@ export default function AdminUsersManagement() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-medium text-white mb-4">Edit User</h3>
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              // Handle edit functionality here
-              setShowEditModal(false);
-            }}>
+            <form onSubmit={handleUpdateUser}>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -248,11 +271,12 @@ export default function AdminUsersManagement() {
                   <input
                     type="number"
                     step="0.01"
+                    min="0"
                     required
                     value={selectedUser.balance}
                     onChange={(e) => setSelectedUser({
                       ...selectedUser,
-                      balance: parseFloat(e.target.value)
+                      balance: parseFloat(e.target.value) || 0
                     })}
                     className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -262,11 +286,16 @@ export default function AdminUsersManagement() {
                 <Button
                   onClick={() => setShowEditModal(false)}
                   variant="secondary"
+                  disabled={isUpdating}
                 >
                   Cancel
                 </Button>
-                <Button type="submit" variant="primary">
-                  Update
+                <Button 
+                  type="submit" 
+                  variant="primary"
+                  disabled={isUpdating}
+                >
+                  {isUpdating ? 'Updating...' : 'Update'}
                 </Button>
               </div>
             </form>

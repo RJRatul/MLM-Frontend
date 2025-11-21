@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import PrivateLayout from "@/layouts/PrivateLayout";
 import { FaRobot } from "react-icons/fa";
 import { apiService } from "@/services/api";
@@ -8,9 +8,7 @@ import { apiService } from "@/services/api";
 export default function AiTrade() {
   const [isActivated, setIsActivated] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isActiveTime, setIsActiveTime] = useState(false);
-  const [timeStatus, setTimeStatus] = useState("");
-  const timeCheckRef = useRef<NodeJS.Timeout | null>(null);
+  const [nextResetTime, setNextResetTime] = useState("");
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -24,37 +22,40 @@ export default function AiTrade() {
     fetchUserProfile();
   }, []);
 
-  const checkTimeStatus = () => {
-    const now = new Date();
-    const hours = now.getHours();
-    const minutes = now.getMinutes();
-    
-    // Active between 3:30 AM to 11:00 AM
-    const isTime = (hours > 3 || (hours === 3 && minutes >= 35)) && 
-                   (hours < 11 || (hours === 11 && minutes === 0));
-    setIsActiveTime(isTime);
-    setTimeStatus(
-      isTime ? "Trading window open" : "Come back tomorrow at 3:35 AM"
-    );
-  };
-
+  // Calculate next reset time (6:01 AM)
   useEffect(() => {
-    checkTimeStatus();
-    // Check every 30 seconds
-    timeCheckRef.current = setInterval(checkTimeStatus, 30_000);
-    return () => {
-      if (timeCheckRef.current) clearInterval(timeCheckRef.current);
+    const calculateNextReset = () => {
+      const now = new Date();
+      const resetTime = new Date();
+      
+      // Set to today's 6:01 AM
+      resetTime.setHours(6, 1, 0, 0);
+      
+      // If it's already past 6:01 AM today, set to tomorrow's 6:01 AM
+      if (now > resetTime) {
+        resetTime.setDate(resetTime.getDate() + 1);
+      }
+      
+      return resetTime.toLocaleTimeString([], { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: true 
+      });
     };
+
+    setNextResetTime(calculateNextReset());
   }, []);
 
   const handleToggleActivation = async () => {
-    if (!isActiveTime || isLoading) return;
+    if (isLoading) return;
+    
     setIsLoading(true);
     try {
       const response = await apiService.toggleAiStatus();
       setIsActivated(response.aiStatus);
     } catch (err) {
-      console.error("Failed to toggle AI status:", err);
+      console.error("Failed to toggle ALGO status:", err);
+      // Revert on error
       setIsActivated((prev) => !prev);
     } finally {
       setIsLoading(false);
@@ -67,50 +68,47 @@ export default function AiTrade() {
   // Function to get current status message
   const getStatusMessage = () => {
     if (isLoading) return "Processing...";
-    
-    if (isActiveTime) {
-      return `Tap the toggle to ${isActivated ? "deactivate" : "activate"} AI trading`;
-    }
-    
-    return "Trading window is closed";
+    return `Tap the toggle to ${isActivated ? "deactivate" : "activate"} ALGO trading`;
   };
 
   return (
     <PrivateLayout>
       <div className="min-h-[80vh] bg-gray-900 flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8">
         <h1 className="text-2xl font-bold text-white mb-8">
-          AI Trade Activation
+          ALGO Trade Activation
         </h1>
 
-        {/* Time info */}
+        {/* Important Message */}
+        <div className="bg-blue-900/30 border border-blue-700 rounded-lg p-4 mb-6 max-w-md text-center">
+          <p className="text-blue-300 font-semibold text-lg mb-2">
+            💰 Keep ALGO Toggle ON to Get Profit!
+          </p>
+          <p className="text-blue-200 text-sm">
+            Your balance will be updated daily with profits when ALGO trading is active. 
+            The ALGO will automatically turn off at 6:01 AM everyday and your balance will be updated with that day&apos;s earnings.
+          </p>
+        </div>
+
+        {/* Current time info */}
         <div className="mb-6 text-center">
           <p className="text-gray-400">
-            Active only between 3:35 AM and 11:00 AM
-          </p>
-          <p className="text-gray-400">
-            Auto-deactivation at 11:00 AM (server-side)
-          </p>
-          <p className="text-gray-400 mt-2">
             Current time: {formatTime(new Date())}
           </p>
-          <p
-            className={`mt-2 font-medium ${
-              isActiveTime ? "text-green-400" : "text-red-400"
-            }`}
-          >
-            {timeStatus}
+          <p className="text-yellow-400 mt-2 font-medium">
+            Next auto-reset: Today at {nextResetTime}
+          </p>
+          <p className="text-green-400 mt-1 text-sm">
+            Available 24/7 - Turn on/off anytime
           </p>
         </div>
 
         {/* Large Toggle Switch */}
         <button
-          disabled={!isActiveTime || isLoading}
+          disabled={isLoading}
           onClick={handleToggleActivation}
           className={`relative flex items-center w-64 h-24 rounded-full transition-colors duration-300 
             ${isActivated ? "bg-green-500" : "bg-gray-600"} 
-            ${
-              !isActiveTime ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
-            }`}
+            ${isLoading ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:opacity-90"}`}
         >
           {/* Sliding knob */}
           <span
@@ -123,11 +121,9 @@ export default function AiTrade() {
             {isActivated ? (
               <>
                 <FaRobot className="w-10 h-10" />
-                <span className="font-semibold text-lg">AI Active</span>
               </>
             ) : (
               <>
-                <span className="font-semibold text-lg">AI Off</span>
                 <FaRobot className="w-10 h-10" />
               </>
             )}
@@ -137,6 +133,31 @@ export default function AiTrade() {
         <p className="text-gray-400 mt-4 text-sm text-center max-w-xs">
           {getStatusMessage()}
         </p>
+
+        {/* Additional Info */}
+        <div className="mt-8 text-center text-gray-400 text-sm max-w-md">
+          <div className="bg-gray-800 rounded-lg p-4">
+            <h3 className="text-white font-semibold mb-2">How It Works:</h3>
+            <ul className="text-left space-y-2">
+              <li>• Keep ALGO ON to earn daily profits</li>
+              <li>• ALGO analyzes markets 24/7 when active</li>
+              <li>• Auto-reset at 6:01 AM daily</li>
+              <li>• Balance updates with profits after reset</li>
+              <li>• Turn back ON anytime after reset</li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Current Status */}
+        <div className={`mt-6 p-3 rounded-lg text-center max-w-md ${
+          isActivated ? 'bg-green-900/30 border border-green-700' : 'bg-gray-800 border border-gray-700'
+        }`}>
+          <p className={isActivated ? "text-green-400 font-semibold" : "text-gray-400"}>
+            {isActivated 
+              ? "✅ ALGO is ACTIVE - Earning profits until 6:01 AM" 
+              : "❌ ALGO is INACTIVE - Not earning profits"}
+          </p>
+        </div>
       </div>
     </PrivateLayout>
   );

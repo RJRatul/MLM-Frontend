@@ -57,7 +57,7 @@ export default function AccountPage() {
               <InfoRow icon={<FaMoneyBill />} label="Balance" value={`$${profile.balance?.toFixed(2)}`} />
               <InfoRow
                 icon={<FaToggleOn />}
-                label="AI Trading Status"
+                label="ALGO Trading Status"
                 value={profile.aiStatus ? 'Activated' : 'Deactivated'}
               />
               <InfoRow icon={<FaCodeBranch />} label="Referral Code" value={profile.referralCode || '—'} />
@@ -76,16 +76,16 @@ export default function AccountPage() {
               />
             </div>
 
-            {/* AI Trading notice */}
+            {/* ALGO Trading notice */}
             <div className="mt-6 bg-gray-800 p-4 rounded-md border border-blue-500/40">
               <p className="text-gray-300 mb-2">
-                To change your AI Trading status, please visit the AI Trade page.
+                To change your ALGO Trading status, please visit the ALGO Trade page.
               </p>
               <Link
                 href="/aiTrade"
                 className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors"
               >
-                Go to AI Trade
+                Go to ALGO Trade
               </Link>
             </div>
           </div>

@@ -18,7 +18,7 @@ import {
   FaTimes,
   FaExchangeAlt,
 } from "react-icons/fa";
-import UserBalance from "@/components/UserBalance";
+// import UserBalance from "@/components/UserBalance";
 import { createPortal } from "react-dom";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -32,7 +32,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Navigation items
   const navItems = [
     { href: "/trade", icon: <FaChartLine className="w-5 h-5" />, label: "Trade" },
-    { href: "/aiTrade", icon: <FaRobot className="w-5 h-5" />, label: "AI Trade" },
+    { href: "/aiTrade", icon: <FaRobot className="w-5 h-5" />, label: "ALGO Trade" },
     { href: "/referral", icon: <FaGift className="w-5 h-5" />, label: "Referral" },
     { href: "/deposit", icon: <FaWallet className="w-5 h-5" />, label: "Deposit" },
     { href: "/withdrawal", icon: <FaExchangeAlt className="w-5 h-5" />, label: "Withdrawal" },
@@ -172,13 +172,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
               {/* Right side */}
               <div className="flex items-center space-x-4">
-                <Link href="/deposit" passHref>
+                {/* <Link href="/deposit" passHref>
                   <UserBalance />
-                </Link>
+                </Link> */}
 
                 <Link href="/aiTrade" passHref>
                   <Button variant="primary" size="sm" icon={<FaRobot className="w-4 h-4" />} className="rounded-full">
-                    AI
+                    Algo Trade
                   </Button>
                 </Link>
 

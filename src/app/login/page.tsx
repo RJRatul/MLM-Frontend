@@ -93,7 +93,7 @@ export default function Login() {
               Sign in to BeeCoin
             </h2>
             <p className="mt-2 text-sm text-gray-400">
-              Access your AI-powered trading dashboard
+              Access your ALGO-powered trading dashboard
             </p>
           </div>
 

@@ -22,7 +22,7 @@ export default function Footer() {
               </span>
             </div>
             <p className="text-gray-400 mb-6 max-w-md">
-              The next generation AI-powered trading platform that helps you
+              The next generation ALGO-powered trading platform that helps you
               maximize your cryptocurrency investments with advanced algorithms.
             </p>
             <div className="flex space-x-4">
@@ -126,7 +126,7 @@ export default function Footer() {
 
         <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-400 text-sm">
-            © {new Date().getFullYear()} NeuroTrade AI. All rights reserved.
+            © {new Date().getFullYear()} NeuroTrade ALGO. All rights reserved.
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <Link

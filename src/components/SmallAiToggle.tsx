@@ -30,14 +30,14 @@ export default function SmallAiToggle() {
     setIsActiveTime(isTime);
   };
 
-  // Fetch user AI status
+  // Fetch user ALGO status
   useEffect(() => {
     const fetchStatus = async () => {
       try {
         const profile = await apiService.getProfile();
         setIsActivated(profile.aiStatus || false);
       } catch (err) {
-        console.error("Failed to fetch AI status:", err);
+        console.error("Failed to fetch ALGO status:", err);
       }
     };
     fetchStatus();
@@ -66,7 +66,7 @@ export default function SmallAiToggle() {
       // Show activation toast
       showAiToast(response.aiStatus);
     } catch (err) {
-      console.error("Failed to toggle AI:", err);
+      console.error("Failed to toggle ALGO:", err);
       setIsActivated((prev) => !prev);
       showAiToast(!isActivated);
     } finally {
@@ -76,7 +76,7 @@ export default function SmallAiToggle() {
 
   const showAiToast = (status: boolean) => {
     setToast({
-      message: `AI Trade is ${status ? "ON" : "OFF"}`,
+      message: `ALGO Trade is ${status ? "ON" : "OFF"}`,
       color: status ? "green" : "red",
       show: true,
     });
@@ -89,7 +89,7 @@ export default function SmallAiToggle() {
 
   const showDisabledToast = () => {
     setToast({
-      message: "You can turn on AI Trade from 3:45 AM to 11:00 AM",
+      message: "You can turn on ALGO Trade from 3:45 AM to 11:00 AM",
       color: "red",
       show: true,
     });
@@ -118,7 +118,7 @@ export default function SmallAiToggle() {
         ref={toggleRef}
         onClick={handleToggle}
         disabled={isLoading}
-        className={`relative flex items-center justify-center w-40 lg:w-14 h-8 rounded-full transition-all duration-300 
+        className={`relative flex items-center justify-center w-14 h-8 rounded-full transition-all duration-300 
           ${isActivated ? "bg-green-500" : "bg-gray-600"} 
           ${!isActiveTime ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
           ${isLoading ? "opacity-70 cursor-wait" : ""}`}
