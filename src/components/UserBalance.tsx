@@ -1,9 +1,9 @@
 // components/UserBalance.tsx - Improved version
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { FaDollarSign, FaSync } from "react-icons/fa";
+import {  FaSync } from "react-icons/fa";
 
 export default function UserBalance() {
   const { user, refreshBalance } = useAuth();
@@ -22,7 +22,7 @@ export default function UserBalance() {
 
   return (
     <div className="flex items-center space-x-3">
-      <div className="relative">
+      {/* <div className="relative">
         <button
           onClick={handleRefresh}
           disabled={isRefreshing}
@@ -41,7 +41,7 @@ export default function UserBalance() {
             }}
           />
         </button>
-      </div>
+      </div> */}
       <div className="">
         <span className="text-white font-medium">
           ${user?.balance?.toFixed(2) || "0.00"}

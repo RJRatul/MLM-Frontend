@@ -3,6 +3,7 @@
 // const API_BASE_URL = 'http://localhost:5000/api';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
+// services/api.ts - Update User interface
 export interface User {
   id: string;
   userId: string
@@ -19,6 +20,11 @@ export interface User {
   tier?: number;
   commissionUnlocked?: boolean;
   commissionRate?: number;
+
+  // Add these new fields
+  algoProfitAmount?: number;
+  algoProfitPercentage?: number;
+  lastProfitCalculation?: string;
 }
 
 export interface AuthResponse {
@@ -330,6 +336,40 @@ class ApiService {
 
   async getBalance(): Promise<{ balance: number }> {
     return this.request<{ balance: number }>('/balance');
+  }
+  // Add this to services/api.ts in the ApiService class
+  async getProfitStats(): Promise<{
+    success: boolean;
+    data: {
+      userId: string;
+      email: string;
+      currentBalance: number;
+      algoProfitAmount: number;
+      algoProfitPercentage: number;
+      lastProfitCalculation: string;
+      aiStatus: boolean;
+      profitType: string;
+      absoluteProfit: number;
+      isProfit: boolean;
+      isLoss: boolean;
+    };
+  }> {
+    return this.request<{
+      success: boolean;
+      data: {
+        userId: string;
+        email: string;
+        currentBalance: number;
+        algoProfitAmount: number;
+        algoProfitPercentage: number;
+        lastProfitCalculation: string;
+        aiStatus: boolean;
+        profitType: string;
+        absoluteProfit: number;
+        isProfit: boolean;
+        isLoss: boolean;
+      };
+    }>('/user/profit-stats');
   }
 
   // Helper method to check if current user is admin

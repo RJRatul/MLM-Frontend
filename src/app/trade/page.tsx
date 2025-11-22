@@ -1,4 +1,4 @@
-// app/trade/page.tsx
+// app/trade/page.tsx - Updated version
 "use client";
 
 import { useState } from "react";
@@ -8,6 +8,7 @@ import PrivateLayout from "@/layouts/PrivateLayout";
 import UserPairsList from "@/components/UserPairsList";
 import UserBalance from "@/components/UserBalance";
 import SmallAiToggle from "@/components/SmallAiToggle";
+import ProfitDisplay from "@/components/ProfitDisplay"; // Import the new component
 
 import { FaArrowDown, FaQrcode, FaRobot } from "react-icons/fa";
 
@@ -55,9 +56,8 @@ export default function Trade() {
                     <div className="text-white text-3xl font-bold mb-1">
                       <UserBalance />
                     </div>
-                    {/* <div className="text-green-400 text-sm">
-                      +$345.70 +2.76%
-                    </div> */}
+                    {/* Display profit data here */}
+                    <ProfitDisplay />
                   </div>
                 </div>
 
