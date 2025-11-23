@@ -187,7 +187,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </div>
 
               {/* Page title */}
-              <div className="flex-1 lg:flex-none">
+              {/* <div className="flex-1 lg:flex-none">
                 <h1 className="text-xl font-semibold text-white">
                   {pathname === '/admin/dashboard' && 'Dashboard'}
                   {pathname === '/admin/users' && 'User Management'}
@@ -195,10 +195,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   {pathname === '/admin/deposit' && 'Deposit Management'}
                   {pathname === '/admin/withdrawal' && 'Withdrawal Management'}
                   {pathname === '/admin/profit-loss' && 'Profit/Loss Rules'}
-                  {pathname === '/admin/profit-loss-schedule' && 'Profit Loss Schedule'} {/* Add this line */}
+                  {pathname === '/admin/profit-loss-schedule' && 'Profit Loss Schedule'} 
                   {pathname === '/admin/settings' && 'System Settings'}
                 </h1>
-              </div>
+              </div> */}
 
               {/* Right side items */}
               <div className="flex items-center space-x-4">

@@ -1,4 +1,4 @@
-// components/ProfitDisplay.tsx - Updated with better error handling
+// components/ProfitDisplay.tsx - Enhanced version
 "use client";
 
 import { useState, useEffect } from "react";
@@ -32,15 +32,8 @@ export default function ProfitDisplay() {
   // If there's an error and no data, show error state
   if (error && !user?.algoProfitAmount && user?.algoProfitAmount !== 0) {
     return (
-      <div className="text-yellow-400 text-sm flex items-center space-x-2">
-        <span>Data unavailable</span>
-        <button
-          onClick={handleRefresh}
-          disabled={isRefreshing}
-          className="text-xs text-blue-400 hover:text-blue-300 underline"
-        >
-          Retry
-        </button>
+      <div className="text-yellow-400 text-sm">
+        Data unavailable
       </div>
     );
   }
@@ -48,17 +41,8 @@ export default function ProfitDisplay() {
   // If no data and no error, show loading/empty state
   if (!user?.algoProfitAmount && user?.algoProfitAmount !== 0) {
     return (
-      <div className="text-gray-400 text-sm flex items-center space-x-2">
-        <span>No profit data</span>
-        {/* <button
-          onClick={handleRefresh}
-          disabled={isRefreshing}
-          className={`text-xs text-blue-400 hover:text-blue-300 ${
-            isRefreshing ? "opacity-50" : ""
-          }`}
-        >
-          {isRefreshing ? "..." : "Refresh"}
-        </button> */}
+      <div className="text-gray-400 text-sm">
+        No profit data
       </div>
     );
   }
@@ -71,14 +55,15 @@ export default function ProfitDisplay() {
     : isLoss
     ? "text-red-400"
     : "text-gray-400";
+    
   const profitSign = isProfit ? "+" : isLoss ? "-" : "";
 
   return (
-    <div className="flex items-center space-x-2">
-      <div className={`${profitColor} text-sm font-medium`}>
-        {profitSign}${Math.abs(user.algoProfitAmount).toFixed(2)} {profitSign}
-        {Math.abs(user.algoProfitPercentage || 0).toFixed(2)}%
-      </div>
+    <div className={`${profitColor} text-lg font-semibold`}>
+      {profitSign}${Math.abs(user.algoProfitAmount).toFixed(2)}
+      <span className={`${isProfit ? 'ml-2 bg-green-500/20 text-green-400' : isLoss ? 'bg-red-500/20 text-red-400' : 'bg-gray-500/20 text-gray-400'} px-2 py-1 rounded-md`}>
+        {profitSign}{Math.abs(user.algoProfitPercentage || 0).toFixed(2)}%
+      </span>
     </div>
   );
 }

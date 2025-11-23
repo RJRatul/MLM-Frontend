@@ -1,27 +1,44 @@
-// app/trade/page.tsx - Updated version
+// app/trade/page.tsx - Complete with smaller toast
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import PrivateLayout from "@/layouts/PrivateLayout";
 import UserPairsList from "@/components/UserPairsList";
 import UserBalance from "@/components/UserBalance";
 import SmallAiToggle from "@/components/SmallAiToggle";
-import ProfitDisplay from "@/components/ProfitDisplay"; // Import the new component
+import ProfitDisplay from "@/components/ProfitDisplay";
 
 import { FaArrowDown, FaQrcode, FaRobot } from "react-icons/fa";
 
 export default function Trade() {
   const { user } = useAuth();
   const [selectedPair, setSelectedPair] = useState("");
-  
+
+  // Toast state moved to page level
+  const [toast, setToast] = useState<{
+    message: string;
+    color: "green" | "red";
+    show: boolean;
+  }>({ message: "", color: "green", show: false });
+  const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const getUserName = () => {
     if (user?.firstName && user?.lastName)
       return `${user.firstName} ${user.lastName}`;
     if (user?.firstName) return user.firstName;
     if (user?.lastName) return user.lastName;
     return "User";
+  };
+
+  const showToast = (message: string, color: "green" | "red") => {
+    setToast({ message, color, show: true });
+
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    toastTimeoutRef.current = setTimeout(() => {
+      setToast((prev) => ({ ...prev, show: false }));
+    }, 2000); // Shorter duration
   };
 
   const actionButtons = [
@@ -39,71 +56,77 @@ export default function Trade() {
 
   return (
     <PrivateLayout>
-      <div className="min-h-screen bg-gray-900 p-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column - Balance & Actions */}
-            <div className="lg:col-span-3 space-y-6">
-              {/* Account Header */}
-              <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700">
-                <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start mb-4 gap-4">
-                  <div>
-                    <h2 className="text-white text-xl font-bold">
-                      {getUserName()}
-                    </h2>
-                  </div>
-                  <div className="flex items-center flex-col">
-                    <div className="text-white text-3xl font-bold mb-1">
-                      <UserBalance />
-                    </div>
-                    {/* Display profit data here */}
-                    <ProfitDisplay />
-                  </div>
-                </div>
+      {/* Smaller, centered toast */}
+      {toast.show && (
+        <div
+          className={`fixed top-4 left-1/2 transform -translate-x-1/2 flex items-center gap-2 px-3 py-2 rounded-lg shadow-lg text-white z-50 animate-in slide-in-from-top duration-300 ${
+            toast.color === "green" ? "bg-gradient-to-br from-green-600 to-green-800" : "bg-gradient-to-br from-red-600 to-red-800"
+          }`}
+        >
+          <FaRobot className="w-3 h-3" />
+          <span className="font-medium text-xs">{toast.message}</span>
+        </div>
+      )}
 
-                {/* Action Buttons */}
-                <div className="flex justify-between items-center gap-2 mt-6">
-                  {actionButtons.map((action) => (
-                    <Link
-                      key={action.label}
-                      href={action.href}
-                      className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gray-700 hover:bg-gray-600 transition-colors flex-1"
-                    >
-                      <div className="p-3 bg-gray-600 rounded-full">
-                        {action.icon}
-                      </div>
-                      <span className="text-white text-sm font-medium text-center">
-                        {action.label}
-                      </span>
-                    </Link>
-                  ))}
-
-                  {/* ALGO Toggle Button - Perfect design */}
-                  <div className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gray-700 hover:bg-gray-600 transition-colors flex-1">
-                    <div className="flex items-center justify-center gap-3">
-                      <div className="p-3 bg-gray-600 rounded-full">
-                        <FaRobot className="w-5 h-5 text-white" />
-                      </div>
-                      <SmallAiToggle />
-                    </div>
-                    <span className="text-white text-sm font-medium text-center">
-                      ALGO Trade
-                    </span>
-                  </div>
-                </div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black p-4">
+        <div className="max-w-md mx-auto">
+          {/* Account Header */}
+          <div className="mb-6">
+            <div className="text-center mb-8">
+              <h1 className="text-white text-2xl font-bold mb-2">
+                {getUserName()}
+              </h1>
+              <div className="text-white text-4xl font-bold mb-2">
+                <UserBalance />
               </div>
-
-              {/* Trading Pairs Section - Full width */}
-              <div className="bg-gray-800 rounded-2xl p-6">
-                <h3 className="text-white text-lg font-semibold mb-4">
-                  Trading Pairs
-                </h3>
-                <UserPairsList
-                  selectedPair={selectedPair}
-                  onPairSelect={setSelectedPair}
-                />
+              <div className="text-green-400 text-lg font-semibold">
+                <ProfitDisplay />
               </div>
             </div>
+
+            {/* Action Buttons */}
+            <div className="flex justify-between items-center gap-4 mb-8">
+              {actionButtons.map((action) => (
+                <Link
+                  key={action.label}
+                  href={action.href}
+                  className="flex flex-col items-center gap-3 flex-1"
+                >
+                  <div className="w-16 h-16 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl flex items-center justify-center shadow-lg border border-gray-700 transition-all duration-200 hover:bg-gray-700 hover:scale-105">
+                    <div className="text-gray-300">{action.icon}</div>
+                  </div>
+                  <span className="text-white text-sm font-medium text-center">
+                    {action.label}
+                  </span>
+                </Link>
+              ))}
+            </div>
+
+            {/* ALGO Toggle Section */}
+            <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 rounded-2xl p-4 border border-purple-700/30 mb-6 backdrop-blur-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-purple-800 rounded-xl flex items-center justify-center">
+                    <FaRobot className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <span className="text-white font-semibold">ALGO Trade</span>
+                    <div className="text-purple-300 text-xs">
+                      Automated trading bot
+                    </div>
+                  </div>
+                </div>
+                <SmallAiToggle onToggle={showToast} />
+              </div>
+            </div>
+          </div>
+
+          {/* Trading Pairs Section */}
+          <div>
+            <UserPairsList
+              selectedPair={selectedPair}
+              onPairSelect={setSelectedPair}
+            />
           </div>
         </div>
       </div>

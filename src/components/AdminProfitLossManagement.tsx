@@ -115,7 +115,6 @@ export default function AdminProfitLossManagement() {
     <div className="bg-gray-800 rounded-lg shadow p-6">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-lg font-medium text-white">Profit/Loss Rules Management</h2>
         <Button
           onClick={() => setShowCreateModal(true)}
           variant="primary"

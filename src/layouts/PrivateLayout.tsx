@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthGuard from "@/components/AuthGuard";
+import AccountSuspended from "@/components/AccountSuspended";
 import { usePathname } from "next/navigation";
 import Button from "@/components/Button";
 import {
@@ -18,7 +19,6 @@ import {
   FaTimes,
   FaExchangeAlt,
 } from "react-icons/fa";
-// import UserBalance from "@/components/UserBalance";
 import { createPortal } from "react-dom";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -28,6 +28,28 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   // Tooltip state
   const [tooltip, setTooltip] = useState<{ text: string; x: number; y: number } | null>(null);
+
+  // Check if user is inactive
+  const isUserInactive = user?.status === 'inactive';
+
+  // Auto logout if user is inactive
+  useEffect(() => {
+    if (isUserInactive) {
+      const timer = setTimeout(() => {
+        logout();
+      }, 300000);
+      return () => clearTimeout(timer);
+    }
+  }, [isUserInactive, logout]);
+
+  // If user is inactive, show AccountSuspended component
+  if (isUserInactive) {
+    return (
+      <AuthGuard>
+        <AccountSuspended email={user?.email} userId={user?.userId} />
+      </AuthGuard>
+    );
+  }
 
   // Navigation items
   const navItems = [
@@ -57,6 +79,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const isActive = (path: string) => pathname === path || pathname.startsWith(path + "/");
 
+  // Normal layout for active users
   return (
     <AuthGuard>
       <div className="flex h-screen bg-gray-900 text-gray-100">
@@ -75,7 +98,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           }`}
         >
           <div className="flex flex-col h-full">
-            {/* Logo - Fixed to prevent text overlap */}
+            {/* Logo */}
             <div className="flex items-center justify-center h-16 px-2 bg-gray-900 border-b border-gray-700">
               <div className="flex flex-col items-center space-y-1">
                 <div className="w-12 h-8 relative">
@@ -119,7 +142,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 >
                   <Link
                     href={item.href}
-                    onClick={() => setSidebarOpen(false)} // Close sidebar on mobile when link is clicked
+                    onClick={() => setSidebarOpen(false)}
                     className={`flex items-center justify-center w-12 h-12 rounded-lg transition-colors duration-200 ${
                       isActive(item.href)
                         ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
@@ -149,11 +172,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </aside>
 
         {/* Main content */}
-        <div className="flex-1 flex flex-col overflow-hidden min-w-0"> {/* Added min-w-0 to prevent overflow issues */}
+        <div className="flex-1 flex flex-col overflow-hidden min-w-0">
           {/* Header */}
           <header className="bg-gray-800 border-b border-gray-700">
             <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
-              {/* Mobile menu button - Fixed to properly toggle sidebar */}
+              {/* Mobile menu button */}
               <div className="lg:hidden">
                 <button
                   onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -172,15 +195,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
               {/* Right side */}
               <div className="flex items-center space-x-4">
-                {/* <Link href="/deposit" passHref>
-                  <UserBalance />
-                </Link> */}
-
-                <Link href="/aiTrade" passHref>
+                {/* <Link href="/aiTrade" passHref>
                   <Button variant="primary" size="sm" icon={<FaRobot className="w-4 h-4" />} className="rounded-full">
                     Algo Trade
                   </Button>
-                </Link>
+                </Link> */}
 
                 <div className="flex items-center">
                   <div className="relative group">

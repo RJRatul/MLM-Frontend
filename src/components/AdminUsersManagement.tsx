@@ -101,7 +101,6 @@ export default function AdminUsersManagement() {
     <div className="bg-gray-800 rounded-lg shadow p-6">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-lg font-medium text-white">Users Management</h2>
         
         {/* Search Form */}
         <form onSubmit={handleSearch} className="flex items-center">

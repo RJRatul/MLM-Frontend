@@ -141,18 +141,6 @@ export default function WithdrawalRequestForm() {
           </div>
         </div>
 
-        {/* Note */}
-        <div className="bg-blue-900/20 border border-blue-500 rounded-lg p-3 text-blue-300 text-sm">
-          <strong>Note:</strong>
-          <ul className="list-disc list-inside mt-1 space-y-1">
-            <li>Minimum balance required: $20</li>
-            <li>Minimum withdrawal amount: $10</li>
-            <li>Balance must remain above $10 after withdrawal</li>
-            <li>Amount will be deducted immediately upon request</li>
-            <li>If rejected, amount will be returned to your balance</li>
-          </ul>
-        </div>
-
         {/* Submit Button */}
         <Button
           type="submit"

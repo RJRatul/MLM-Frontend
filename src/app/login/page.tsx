@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import AuthGuard from "@/components/AuthGuard";
 import { useAuth } from "@/contexts/AuthContext";
 import Button from "@/components/Button";
+import AccountSuspended from "@/components/AccountSuspended";
 import {
   FaArrowLeft,
   FaSignInAlt,
@@ -28,9 +29,10 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showSuspendedModal, setShowSuspendedModal] = useState(false);
 
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, logout, refreshUser, user } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,6 +41,18 @@ export default function Login() {
 
     try {
       await login(email, password);
+      
+      // Check user status by fetching fresh profile
+      await refreshUser();
+      
+      // Check if user is inactive
+      if (user?.status === 'inactive') {
+        setShowSuspendedModal(true);
+        logout();
+        return;
+      }
+      
+      // If user is active, redirect to trade page
       router.push("/trade");
     } catch (error: any) {
       setError(error.message || "Login failed. Please try again.");
@@ -71,6 +85,11 @@ export default function Login() {
     const body = getEmailBody();
     return `mailto:beecoin.aitrading@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };
+
+  // If user is suspended, show the AccountSuspended component
+  if (showSuspendedModal) {
+    return <AccountSuspended email={email} userId={user?.userId} />;
+  }
 
   return (
     <AuthGuard requireAuth={false}>

@@ -20,8 +20,7 @@ export interface User {
   tier?: number;
   commissionUnlocked?: boolean;
   commissionRate?: number;
-
-  // Add these new fields
+  status: 'active' | 'inactive';
   algoProfitAmount?: number;
   algoProfitPercentage?: number;
   lastProfitCalculation?: string;

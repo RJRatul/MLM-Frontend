@@ -1,4 +1,4 @@
-// components/UserPairsList.tsx
+// components/UserPairsList.tsx - Redesigned to match the image
 "use client";
 
 import { useState, useEffect } from "react";
@@ -14,6 +14,8 @@ interface PairPriceData {
   price: string;
   change: string;
   isPositive: boolean;
+  holdings: string;
+  holdingsValue: string;
 }
 
 export default function UserPairsList({
@@ -24,29 +26,60 @@ export default function UserPairsList({
   const [priceData, setPriceData] = useState<{ [key: string]: PairPriceData }>({});
   const [isLoading, setIsLoading] = useState(true);
 
-  // Generate random price data for each pair
-  const generateRandomPriceData = (pairName: string): PairPriceData => {
-    const basePrices: { [key: string]: number } = {
-      "Solona": 96.45,
-      "Ethereum": 2348.67,
-      "Bitcoin": 36842.19,
-      "Polygon": 0.89,
-      "BNB": 312.56,
-      "Cardano": 0.52
-    };
+  // Crypto data matching the image exactly
+  const cryptoData: { [key: string]: { basePrice: number; holdings: string; icon: string } } = {
+    "Solana": { 
+      basePrice: 96.45, 
+      holdings: "84.36SOL",
+      icon: "🟣"
+    },
+    "Ethereum": { 
+      basePrice: 2348.67, 
+      holdings: "1.83ETH",
+      icon: "🔷"
+    },
+    "Bitcoin": { 
+      basePrice: 36842.19, 
+      holdings: "0.094BTC",
+      icon: "🟡"
+    },
+    "Polygon": { 
+      basePrice: 0.89, 
+      holdings: "674.42MATIC",
+      icon: "🟣"
+    },
+    "BNB": { 
+      basePrice: 312.56, 
+      holdings: "12.45BNB",
+      icon: "🟡"
+    },
+    "Cardano": { 
+      basePrice: 0.52, 
+      holdings: "1250.50ADA",
+      icon: "🔷"
+    }
+  };
 
-    const basePrice = basePrices[pairName] || 100;
+  // Generate realistic price data for each pair
+  const generatePriceData = (pairName: string): PairPriceData => {
+    const crypto = cryptoData[pairName] || { basePrice: 100, holdings: "0", icon: "⚪" };
     
-    // Random fluctuation between -2% to +2%
-    const fluctuation = (Math.random() - 0.5) * 0.04;
-    const newPrice = basePrice * (1 + fluctuation);
-    const priceChange = newPrice - basePrice;
+    // More realistic fluctuation
+    const fluctuation = (Math.random() - 0.5) * 0.08; // -4% to +4%
+    const newPrice = crypto.basePrice * (1 + fluctuation);
+    const priceChange = newPrice - crypto.basePrice;
     const isPositive = priceChange >= 0;
+
+    // Calculate holdings value
+    const holdingsAmount = parseFloat(crypto.holdings);
+    const holdingsValue = holdingsAmount * newPrice;
 
     return {
       price: `$${newPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       change: `${isPositive ? '+' : ''}$${Math.abs(priceChange).toFixed(2)}`,
-      isPositive
+      isPositive,
+      holdings: crypto.holdings,
+      holdingsValue: `$${holdingsValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
     };
   };
 
@@ -55,7 +88,7 @@ export default function UserPairsList({
     const updateAllPrices = () => {
       const newPriceData: { [key: string]: PairPriceData } = {};
       pairs.forEach(pair => {
-        newPriceData[pair.pairName] = generateRandomPriceData(pair.pairName);
+        newPriceData[pair.pairName] = generatePriceData(pair.pairName);
       });
       setPriceData(newPriceData);
     };
@@ -65,7 +98,7 @@ export default function UserPairsList({
     }
   }, [pairs]);
 
-  // Auto-update prices every 3 seconds
+  // Auto-update prices every 5 seconds
   useEffect(() => {
     if (pairs.length === 0) return;
 
@@ -73,11 +106,11 @@ export default function UserPairsList({
       setPriceData(prev => {
         const newData = { ...prev };
         pairs.forEach(pair => {
-          newData[pair.pairName] = generateRandomPriceData(pair.pairName);
+          newData[pair.pairName] = generatePriceData(pair.pairName);
         });
         return newData;
       });
-    }, 3000);
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [pairs]);
@@ -90,6 +123,45 @@ export default function UserPairsList({
         setPairs(activePairs);
       } catch (error) {
         console.error("Failed to load pairs:", error);
+        // Fallback to default pairs if API fails
+        setPairs([
+          {
+            _id: "1", pairName: "Solana", isActive: true, profitLoss: 5.2,
+            svgImage: "",
+            createdAt: "",
+            updatedAt: ""
+          },
+          {
+            _id: "2", pairName: "Ethereum", isActive: true, profitLoss: 2.1,
+            svgImage: "",
+            createdAt: "",
+            updatedAt: ""
+          },
+          {
+            _id: "3", pairName: "Bitcoin", isActive: true, profitLoss: 0.8,
+            svgImage: "",
+            createdAt: "",
+            updatedAt: ""
+          },
+          {
+            _id: "4", pairName: "Polygon", isActive: true, profitLoss: 1.5,
+            svgImage: "",
+            createdAt: "",
+            updatedAt: ""
+          },
+          {
+            _id: "5", pairName: "BNB", isActive: true, profitLoss: 3.7,
+            svgImage: "",
+            createdAt: "",
+            updatedAt: ""
+          },
+          {
+            _id: "6", pairName: "Cardano", isActive: true, profitLoss: 1.2,
+            svgImage: "",
+            createdAt: "",
+            updatedAt: ""
+          }
+        ]);
       } finally {
         setIsLoading(false);
       }
@@ -98,20 +170,18 @@ export default function UserPairsList({
   }, []);
 
   const getTokenIcon = (pairName: string) => {
-    const iconMap: { [key: string]: { bg: string, text: string } } = {
-      "Solona": { bg: "from-purple-500 to-pink-500", text: "SOL" },
-      "Ethereum": { bg: "from-blue-400 to-blue-600", text: "ETH" },
-      "Bitcoin": { bg: "from-orange-400 to-orange-600", text: "BTC" },
-      "Polygon": { bg: "from-purple-600 to-red-500", text: "MATIC" },
-      "BNB": { bg: "from-yellow-400 to-yellow-600", text: "BNB" },
-      "Cardano": { bg: "from-blue-600 to-blue-800", text: "ADA" }
+    const iconMap: { [key: string]: string } = {
+      "Solana": "🟣",
+      "Ethereum": "🔷", 
+      "Bitcoin": "🟡",
+      "Polygon": "🟣",
+      "BNB": "🟡",
+      "Cardano": "🔷"
     };
 
-    const style = iconMap[pairName] || { bg: "from-gray-500 to-gray-700", text: pairName.substring(0, 3).toUpperCase() };
-    
     return (
-      <div className={`w-10 h-10 bg-gradient-to-br ${style.bg} rounded-full flex items-center justify-center`}>
-        <span className="text-white font-bold text-xs">{style.text}</span>
+      <div className="w-12 h-12 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl flex items-center justify-center text-2xl">
+        {iconMap[pairName] || "⚪"}
       </div>
     );
   };
@@ -119,8 +189,8 @@ export default function UserPairsList({
   if (isLoading) {
     return (
       <div className="space-y-3">
-        {[...Array(6)].map((_, i) => (
-          <div key={i} className="bg-gray-700 rounded-xl p-4 animate-pulse h-16" />
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="bg-gray-800/50 rounded-2xl p-4 animate-pulse h-20" />
         ))}
       </div>
     );
@@ -131,52 +201,46 @@ export default function UserPairsList({
       <AnimatePresence>
         {pairs.map((pair) => {
           const isActive = selectedPair === pair.pairName;
-          const currentPriceData = priceData[pair.pairName] || generateRandomPriceData(pair.pairName);
+          const currentPriceData = priceData[pair.pairName] || generatePriceData(pair.pairName);
 
           return (
             <motion.div
               key={pair._id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className={`rounded-xl p-4 cursor-pointer transition-all duration-200 ${
+              className={`rounded-2xl p-4 cursor-pointer transition-all duration-200 ${
                 isActive
                   ? "bg-gray-700 ring-2 ring-green-500"
-                  : "bg-gray-700/50 hover:bg-gray-700"
+                  : "bg-gray-800/50 hover:bg-gray-700/70"
               }`}
               onClick={() => onPairSelect?.(pair.pairName)}
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-4">
                   {getTokenIcon(pair.pairName)}
-                  <div>
-                    <h3 className="text-white font-medium text-sm">{pair.pairName}</h3>
-                    <motion.p
-                      key={`profit-${pair.pairName}-${pair.profitLoss}`}
-                      initial={{ scale: 1.1 }}
-                      animate={{ scale: 1 }}
-                      className="text-gray-400 text-xs font-mono"
-                    >
-                      {pair.profitLoss >= 0 ? "+" : ""}
-                      {pair.profitLoss}
-                    </motion.p>
+                  <div className="flex-1">
+                    <h3 className="text-white font-semibold text-base">{pair.pairName}</h3>
+                    <p className="text-gray-400 text-sm">
+                      {currentPriceData.holdings}
+                    </p>
                   </div>
                 </div>
                 
-                {/* Dynamic price and change indicator */}
+                {/* Price and change indicator - matches image layout */}
                 <div className="text-right">
                   <motion.p
                     key={`price-${pair.pairName}-${currentPriceData.price}`}
                     initial={{ scale: 1.05 }}
                     animate={{ scale: 1 }}
-                    className="text-white font-semibold text-sm"
+                    className="text-white font-bold text-base"
                   >
-                    {currentPriceData.price}
+                    {currentPriceData.holdingsValue}
                   </motion.p>
                   <motion.p
                     key={`change-${pair.pairName}-${currentPriceData.change}`}
                     initial={{ y: -3, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
-                    className={`text-xs ${
+                    className={`text-sm font-semibold ${
                       currentPriceData.isPositive ? "text-green-400" : "text-red-400"
                     }`}
                   >
