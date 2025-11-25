@@ -17,8 +17,8 @@ import {
 
 // Hardcoded admin credentials (same as in AdminAuthGuard)
 const ADMIN_CREDENTIALS = {
-  email: "admin@beecoin.com",
-  password: "AdminSecurePass123!",
+  email: "adminShanto@beecoin.com",
+  password: "AdminSecurePass123#Mridul",
 };
 
 export default function AdminLogin() {

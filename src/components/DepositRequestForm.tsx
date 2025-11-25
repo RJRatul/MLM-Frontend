@@ -66,7 +66,7 @@ export default function DepositRequestForm() {
         )}
         <div className="cursor-pointer" onClick={() => setShowImageModal(true)}>
           <Image
-            src="/binanceQR.png"
+            src="/binanceQR.jpg"
             alt="BeeCoin Logo"
             width={80}
             height={40}
@@ -154,14 +154,23 @@ export default function DepositRequestForm() {
               </button>
             </div>
             <div className="p-6 flex justify-center">
-              <Image
-                src="/binanceQR.png"
-                alt="Binance Pay QR Code - Enlarged"
-                width={400}
-                height={400}
-                className="object-contain"
-                priority
-              />
+              <div className="w-full h-auto flex justify-center">
+                <Image
+                  src="/binanceQR.jpg"
+                  alt="Binance Pay QR Code - Enlarged"
+                  width={0}
+                  height={0}
+                  sizes="100vw"
+                  className="w-full h-auto max-w-full"
+                  style={{ 
+                    width: 'auto', 
+                    height: 'auto', 
+                    maxHeight: '70vh',
+                    maxWidth: '100%'
+                  }}
+                  priority
+                />
+              </div>
             </div>
             <div className="p-4 border-t border-gray-700">
               <Button
