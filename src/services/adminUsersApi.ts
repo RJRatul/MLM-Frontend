@@ -1,5 +1,5 @@
 // services/adminUsersApi.ts
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://beecoin.cloud/api';
 
 export interface User {
   _id: string;

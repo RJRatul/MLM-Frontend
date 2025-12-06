@@ -41,7 +41,7 @@ export default function AdminCronSettings() {
       setSettings(data);
       
       // Also load the full backend response for display
-      const fullResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/cron-settings`, {
+      const fullResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://beecoin.cloud/api'}/cron-settings`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminAuthToken')}`,
           'Content-Type': 'application/json',
