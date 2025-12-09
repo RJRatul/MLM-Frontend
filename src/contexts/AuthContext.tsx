@@ -99,41 +99,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const refreshUser = async () => {
-    try {
-      const userData = await apiService.getProfile();
-      
-      // Try to get profit stats, but don't fail if it doesn't work
-      let profitData = {
-        algoProfitAmount: 0,
-        algoProfitPercentage: 0,
-        lastProfitCalculation: undefined as string | undefined
-      };
-      
-      try {
-        const profitStats = await apiService.getProfitStats();
-        profitData = {
-          algoProfitAmount: profitStats.data.algoProfitAmount,
-          algoProfitPercentage: profitStats.data.algoProfitPercentage,
-          lastProfitCalculation: profitStats.data.lastProfitCalculation
-        };
-      } catch (profitError) {
-        console.warn("Could not fetch profit stats:", profitError);
-      }
-      
-      const updatedUser = {
-        ...userData,
-        ...profitData
-      };
-      
-      setUser(updatedUser);
-      // Only store basic user info
-      const { balance, algoProfitAmount, algoProfitPercentage, lastProfitCalculation, ...userWithoutSensitiveData } = updatedUser;
-      localStorage.setItem("user", JSON.stringify(userWithoutSensitiveData));
-    } catch (error) {
-      console.error("Failed to refresh user data:", error);
-    }
-  };
+const refreshUser = async () => {
+  try {
+    const userData = await apiService.getProfile();
+    
+    // Update user state
+    setUser(userData);
+    
+    // Update localStorage with complete user data
+    localStorage.setItem("user", JSON.stringify(userData));
+    
+    console.log('User refreshed:', {
+      hasUserId: !!userData.userId,
+      hasFirstName: !!userData.firstName,
+      balance: userData.balance
+    });
+  } catch (error) {
+    console.error("Failed to refresh user data:", error);
+    // Don't throw error, just log it
+  }
+};
 
   useEffect(() => {
     // Check if user is logged in on initial load
@@ -168,49 +153,101 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading(false);
   }, []);
 
-  const login = async (email: string, password: string) => {
-    try {
-      const data = await apiService.login({ email, password });
+const login = async (email: string, password: string) => {
+  try {
+    const data = await apiService.login({ email, password });
 
-      // Store token and basic user data
-      localStorage.setItem("authToken", data.token);
-      const { balance, algoProfitAmount, algoProfitPercentage, lastProfitCalculation, ...userWithoutSensitiveData } = data.user;
-      localStorage.setItem("user", JSON.stringify(userWithoutSensitiveData));
+    // Store token and basic user data
+    localStorage.setItem("authToken", data.token);
+    
+    // Extract and store user data properly
+    const userData: User = {
+      id: data.user.id || data.user._id,
+      _id: data.user._id,
+      userId: data.user.userId || '',
+      email: data.user.email,
+      firstName: data.user.firstName,
+      lastName: data.user.lastName,
+      balance: data.user.balance || 0,
+      status: data.user.status || 'active',
+      aiStatus: data.user.aiStatus || false,
+      isAdmin: data.user.isAdmin || false,
+      referralCode: data.user.referralCode || '',
+      referralCount: data.user.referralCount || 0,
+      referralEarnings: data.user.referralEarnings || 0,
+      level: data.user.level || 0,
+      tier: data.user.tier || 3,
+      commissionUnlocked: data.user.commissionUnlocked || false,
+      commissionRate: data.user.commissionRate || 0,
+      algoProfitAmount: data.user.algoProfitAmount || 0,
+      algoProfitPercentage: data.user.algoProfitPercentage || 0,
+      lastProfitCalculation: data.user.lastProfitCalculation,
+      createdAt: data.user.createdAt,
+      updatedAt: data.user.updatedAt,
+      transactions: data.user.transactions || []
+    };
+    
+    localStorage.setItem("user", JSON.stringify(userData));
+    setToken(data.token);
+    setUser(userData);
+  } catch (error) {
+    throw error;
+  }
+};
 
-      setToken(data.token);
-      setUser(data.user);
-    } catch (error) {
-      throw error;
-    }
-  };
+const register = async (
+  firstName: string,
+  lastName: string,
+  email: string,
+  password: string,
+  referralCode?: string
+) => {
+  try {
+    const data = await apiService.register({
+      firstName,
+      lastName,
+      email,
+      password,
+      referralCode,
+    });
 
-  const register = async (
-    firstName: string,
-    lastName: string,
-    email: string,
-    password: string,
-    referralCode?: string
-  ) => {
-    try {
-      const data = await apiService.register({
-        firstName,
-        lastName,
-        email,
-        password,
-        referralCode,
-      });
-
-      // Store token and basic user data
-      localStorage.setItem("authToken", data.token);
-      const { balance, algoProfitAmount, algoProfitPercentage, lastProfitCalculation, ...userWithoutSensitiveData } = data.user;
-      localStorage.setItem("user", JSON.stringify(userWithoutSensitiveData));
-
-      setToken(data.token);
-      setUser(data.user);
-    } catch (error) {
-      throw error;
-    }
-  };
+    // Store token and basic user data
+    localStorage.setItem("authToken", data.token);
+    
+    // Extract and store user data properly
+    const userData: User = {
+      id: data.user.id || data.user._id,
+      _id: data.user._id,
+      userId: data.user.userId || '',
+      email: data.user.email,
+      firstName: data.user.firstName,
+      lastName: data.user.lastName,
+      balance: data.user.balance || 0,
+      status: data.user.status || 'active',
+      aiStatus: data.user.aiStatus || false,
+      isAdmin: data.user.isAdmin || false,
+      referralCode: data.user.referralCode || '',
+      referralCount: data.user.referralCount || 0,
+      referralEarnings: data.user.referralEarnings || 0,
+      level: data.user.level || 0,
+      tier: data.user.tier || 3,
+      commissionUnlocked: data.user.commissionUnlocked || false,
+      commissionRate: data.user.commissionRate || 0,
+      algoProfitAmount: data.user.algoProfitAmount || 0,
+      algoProfitPercentage: data.user.algoProfitPercentage || 0,
+      lastProfitCalculation: data.user.lastProfitCalculation,
+      createdAt: data.user.createdAt,
+      updatedAt: data.user.updatedAt,
+      transactions: data.user.transactions || []
+    };
+    
+    localStorage.setItem("user", JSON.stringify(userData));
+    setToken(data.token);
+    setUser(userData);
+  } catch (error) {
+    throw error;
+  }
+};
 
   const logout = () => {
     localStorage.removeItem("authToken");

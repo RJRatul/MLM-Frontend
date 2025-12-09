@@ -5,8 +5,9 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://beecoin.cloud/a
 
 // services/api.ts - Update User interface
 export interface User {
-  id: string;
-  userId: string
+  id?: string;
+  _id?: string;
+  userId: string;
   email: string;
   firstName: string;
   lastName: string;
@@ -24,6 +25,9 @@ export interface User {
   algoProfitAmount?: number;
   algoProfitPercentage?: number;
   lastProfitCalculation?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  transactions?: any[];
 }
 
 export interface AuthResponse {
@@ -324,8 +328,41 @@ class ApiService {
 
   async getProfile(): Promise<User> {
     try {
-      return await this.request<User>('/user/profile'); // Updated endpoint
+      const response = await this.request<{ success: boolean; data: User }>('/user/profile');
+
+      // Handle both response formats
+      const userData = response.success ? response.data : response as any;
+
+      // Ensure we have all required fields
+      const user: User = {
+        id: userData.id || userData._id,
+        _id: userData._id,
+        userId: userData.userId || '',
+        email: userData.email || '',
+        firstName: userData.firstName || '',
+        lastName: userData.lastName || '',
+        balance: userData.balance || 0,
+        status: userData.status || 'active',
+        aiStatus: userData.aiStatus || false,
+        isAdmin: userData.isAdmin || false,
+        referralCode: userData.referralCode || '',
+        referralCount: userData.referralCount || 0,
+        referralEarnings: userData.referralEarnings || 0,
+        level: userData.level || 0,
+        tier: userData.tier || 3,
+        commissionUnlocked: userData.commissionUnlocked || false,
+        commissionRate: userData.commissionRate || 0,
+        algoProfitAmount: userData.algoProfitAmount || 0,
+        algoProfitPercentage: userData.algoProfitPercentage || 0,
+        lastProfitCalculation: userData.lastProfitCalculation,
+        createdAt: userData.createdAt,
+        updatedAt: userData.updatedAt,
+        transactions: userData.transactions || []
+      };
+
+      return user;
     } catch (error: any) {
+      console.error('Failed to get profile:', error);
       if (error.message.includes('404')) {
         throw new Error('User profile not found. Please check the endpoint or authentication.');
       }
